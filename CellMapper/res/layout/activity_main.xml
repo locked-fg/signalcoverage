@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/LinearLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:gravity="top"
+    android:orientation="vertical" >
+
+    <ToggleButton
+        android:id="@+id/onOffButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textOff="Off"
+        android:textOn="On" />
+
+    <EditText
+        android:id="@+id/textfield"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:clickable="false"
+        android:cursorVisible="false"
+        android:editable="false"
+        android:ems="10"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="top"
+        android:inputType="textMultiLine"
+        android:textSize="15sp"
+        android:typeface="monospace" />
+
+</LinearLayout>

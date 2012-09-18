@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <CheckBoxPreference android:summary="use GPS for fine positioning" android:key="use_gps" android:title="GPS on" android:enabled="true"/>
+    <ListPreference android:entryValues="@array/updateIntervalValues" android:key="update_interval" android:entries="@array/updateInterval" android:title="Update Interval" android:summary="How often to refresh your location"/>
+
+</PreferenceScreen>
