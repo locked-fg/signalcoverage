@@ -1,4 +1,4 @@
-package de.locked.cellmapper;
+package de.locked.cellmapper.model;
 
 public class Preferences {
     public static String use_gps = "use_gps";

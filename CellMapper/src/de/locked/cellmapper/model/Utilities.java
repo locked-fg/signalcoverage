@@ -1,4 +1,4 @@
-package de.locked.cellmapper;
+package de.locked.cellmapper.model;
 
 import android.content.Context;
 import android.provider.Settings;

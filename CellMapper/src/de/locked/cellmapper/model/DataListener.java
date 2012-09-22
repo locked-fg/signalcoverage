@@ -1,4 +1,4 @@
-package de.locked.cellmapper;
+package de.locked.cellmapper.model;
 
 import java.util.Iterator;
 
@@ -70,11 +70,11 @@ public class DataListener extends PhoneStateListener implements LocationListener
     public void onStatusChanged(String provider, int status, Bundle extras) {
     }
 
-    class Data {
-        final Location location;
-        final SignalStrength signal;
-        final GpsStatus gpsStatus;
-        final int satellites;
+    public class Data {
+        public final Location location;
+        public final SignalStrength signal;
+        public final GpsStatus gpsStatus;
+        public final int satellites;
 
         public Data(Location location, SignalStrength signal, GpsStatus gpsStatus, int satellites) {
             super();

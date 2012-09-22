@@ -3,6 +3,8 @@ package de.locked.cellmapper;
 import java.util.Iterator;
 import java.util.List;
 
+import de.locked.cellmapper.model.DbHandler;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Intent;
@@ -156,6 +158,9 @@ public class CellMapperMain extends Activity {
         switch (item.getItemId()) {
         case R.id.menu_settings:
             startActivity(new Intent(this, ConfigActivity.class));
+            return true;
+        case R.id.menu_upload:
+            startActivity(new Intent(this, UploadActivity.class));
             return true;
         }
         return false;

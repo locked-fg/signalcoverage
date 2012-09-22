@@ -1,5 +1,7 @@
 package de.locked.cellmapper;
 
+import de.locked.cellmapper.model.DataListener;
+import de.locked.cellmapper.model.Preferences;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;

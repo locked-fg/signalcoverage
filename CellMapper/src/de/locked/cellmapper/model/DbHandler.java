@@ -1,4 +1,4 @@
-package de.locked.cellmapper;
+package de.locked.cellmapper.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,7 +9,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-import de.locked.cellmapper.DataListener.Data;
+import de.locked.cellmapper.model.DataListener.Data;
 
 public class DbHandler {
     public static final String LOG_TAG = DbHandler.class.getName();
