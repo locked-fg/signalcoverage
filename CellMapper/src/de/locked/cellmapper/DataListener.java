@@ -1,8 +1,11 @@
 package de.locked.cellmapper;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
 
+import android.app.Activity;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.GpsSatellite;
@@ -26,9 +29,9 @@ public class DataListener extends PhoneStateListener implements LocationListener
 
     private SignalStrength signal;
 
-    public DataListener(Context context, SQLiteDatabase db) {
+    public DataListener(Context context) {
         this.context = context;
-        this.db = db;
+        this.db = context.openOrCreateDatabase(DB_NAME, Activity.MODE_PRIVATE, null);;
     }
 
     @Override
@@ -54,58 +57,58 @@ public class DataListener extends PhoneStateListener implements LocationListener
     }
 
     public void save(Data data) {
-//        if (data.location == null || data.signal == null) {
-//            return;
-//        }
-//
-//        // all location stuff
-//        long time = data.location.getTime();
-//        int timeSec = (int) (data.location.getTime() / 1000);
-//        float accuracy = data.location.getAccuracy();
-//        double altitude = data.location.getAltitude();
-//        int satellites = data.satellites;
-//        double latitude = data.location.getLatitude();
-//        double longitude = data.location.getLongitude();
-//        float speed = data.location.getSpeed();
-//
-//        // # sqlite3
-//        // /data/data/de.locked.cellmapper/databases/CellMapper
-//        // sqlite> select datetime(time, 'unixepoch', 'localtime')
-//        // FROM Base
-//        // ORDER BY TIME DESC LIMIT 4;
-//        db.beginTransaction();
-//        try {
-//            if (Utilities.isAirplaneModeOn(context)) {
-//                Log.i(LOG_TAG, "writing data to db (location) at time " + sdf.format(new Date(time)));
-//                db.execSQL("INSERT OR IGNORE INTO " + TABLE
-//                        + "(time, accuracy, altitude, satellites, latitude, longitude, speed) " + " VALUES " //
-//                        + String.format(Locale.US, //
-//                                "(%d, %f, %f, %d, %f, %f, %f)", //
-//                                timeSec, accuracy, altitude, satellites, latitude, longitude, speed) //
-//                );
-//            } else {
-//                int cdmaDbm = data.signal.getCdmaDbm();
-//                int evdoDbm = data.signal.getEvdoDbm();
-//                int evdoSnr = data.signal.getEvdoSnr();
-//                int signalStrength = data.signal.getGsmSignalStrength();
-//
-//                Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(time)));
-//                db.execSQL("INSERT OR REPLACE INTO "
-//                        + TABLE
-//                        + "(time, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm, evdoSnr, signalStrength) "
-//                        + " VALUES " //
-//                        + String.format(
-//                                Locale.US, //
-//                                "(%d, %f, %f, %d, %f, %f, %f, %d, %d, %d, %d)", //
-//                                timeSec, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm,
-//                                evdoSnr, signalStrength) //
-//                );
-//            }
-//            Log.i(LOG_TAG, "transaction successfull");
-//            db.setTransactionSuccessful();
-//        } finally {
-//            db.endTransaction();
-//        }
+        if (data.location == null || data.signal == null) {
+            return;
+        }
+
+        // all location stuff
+        long time = data.location.getTime();
+        int timeSec = (int) (data.location.getTime() / 1000);
+        float accuracy = data.location.getAccuracy();
+        double altitude = data.location.getAltitude();
+        int satellites = data.satellites;
+        double latitude = data.location.getLatitude();
+        double longitude = data.location.getLongitude();
+        float speed = data.location.getSpeed();
+
+        // # sqlite3
+        // /data/data/de.locked.cellmapper/databases/CellMapper
+        // sqlite> select datetime(time, 'unixepoch', 'localtime')
+        // FROM Base
+        // ORDER BY TIME DESC LIMIT 4;
+        db.beginTransaction();
+        try {
+            if (Utilities.isAirplaneModeOn(context)) {
+                Log.i(LOG_TAG, "writing data to db (location) at time " + sdf.format(new Date(time)));
+                db.execSQL("INSERT OR IGNORE INTO " + TABLE
+                        + "(time, accuracy, altitude, satellites, latitude, longitude, speed) " + " VALUES " //
+                        + String.format(Locale.US, //
+                                "(%d, %f, %f, %d, %f, %f, %f)", //
+                                timeSec, accuracy, altitude, satellites, latitude, longitude, speed) //
+                );
+            } else {
+                int cdmaDbm = data.signal.getCdmaDbm();
+                int evdoDbm = data.signal.getEvdoDbm();
+                int evdoSnr = data.signal.getEvdoSnr();
+                int signalStrength = data.signal.getGsmSignalStrength();
+
+                Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(time)));
+                db.execSQL("INSERT OR REPLACE INTO "
+                        + TABLE
+                        + "(time, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm, evdoSnr, signalStrength) "
+                        + " VALUES " //
+                        + String.format(
+                                Locale.US, //
+                                "(%d, %f, %f, %d, %f, %f, %f, %d, %d, %d, %d)", //
+                                timeSec, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm,
+                                evdoSnr, signalStrength) //
+                );
+            }
+            Log.i(LOG_TAG, "transaction successfull");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     @Override

@@ -45,7 +45,7 @@ public class CellMapperMain extends Activity {
         preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         db = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
         setupDB();
-        dataListener = new DataListener(this, db);
+        dataListener = new DataListener(this);
 
         // set defaults once
         PreferenceManager.setDefaultValues(this, R.xml.config, false);
