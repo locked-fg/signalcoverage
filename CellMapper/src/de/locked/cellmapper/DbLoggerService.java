@@ -30,6 +30,14 @@ public class DbLoggerService extends Service {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i("LocalService", "Received start id " + startId + ": " + intent);
+        // We want this service to continue running until it is explicitly
+        // stopped, so return sticky.
+        return START_STICKY;
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
 
@@ -71,7 +79,7 @@ public class DbLoggerService extends Service {
         boolean useGPS = preferences.getBoolean(Preferences.use_gps, true);
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Log.i(LOG_TAG, "request updates every " + updateInterval + "ms / " + MIN_LOCATION_DISTANCE + "m");
-        
+
         if (useGPS) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, updateInterval, MIN_LOCATION_DISTANCE,
                     dataListener);
