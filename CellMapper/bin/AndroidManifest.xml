@@ -29,7 +29,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".ConfigActivity" />
-
+        <activity android:name=".UploadActivity" />
+        <activity android:name=".AppInfo" />
+        
         <service
             android:name=".DbLoggerService" />
     </application>
