@@ -6,8 +6,6 @@ import java.util.List;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,21 +22,17 @@ public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
     private static final int UI_REFRESH_INTERVAL = 5000;
 
-    public static final String DB_NAME = "CellMapper";
-    public static final String TABLE = "Base";
-
-    private SQLiteDatabase db;
     private Thread refresher;
     private Handler handler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(LOG_TAG, "create activity");
 
         setContentView(R.layout.activity_main);
 
         handler = new Handler();
-        db = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
 
         // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.config, false);
@@ -69,6 +63,7 @@ public class CellMapperMain extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.i(LOG_TAG, "resume activity");
 
         startUiUpdates();
     }
@@ -76,6 +71,7 @@ public class CellMapperMain extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        Log.i(LOG_TAG, "pause activity");
 
         stopUiUpdates();
     }
@@ -83,6 +79,7 @@ public class CellMapperMain extends Activity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.i(LOG_TAG, "destroy activity");
 
         stopUiUpdates();
         stopService();
@@ -112,8 +109,8 @@ public class CellMapperMain extends Activity {
                     while (!interrupted()) {
                         refresh();
                         sleep(UI_REFRESH_INTERVAL); // all 5s
-                        Looper.loop();
                     }
+                    Looper.loop();
                 } catch (Exception e) {
                     Log.i(LOG_TAG, "interrupted refresh thread");
                 }
@@ -166,21 +163,9 @@ public class CellMapperMain extends Activity {
 
     private void refresh() {
         final StringBuilder sb = new StringBuilder();
-        sb.append(getLastEntryString());
+        sb.append(DbHandler.getLastEntryString(this));
         sb.append("\n------\n");
-
-        Cursor cursor = db.rawQuery("SELECT *  FROM " + TABLE + " ORDER BY time DESC LIMIT 1", null);
-        if (cursor.moveToFirst()) {
-            for (int i = 0; i < cursor.getColumnCount(); i++) {
-                String columnName = cursor.getColumnName(i);
-                String value = cursor.getString(i);
-
-                sb.append(Utilities.rpad(columnName + ":", 16, " "));
-                sb.append(value);
-                sb.append("\n");
-            }
-        }
-        cursor.close();
+        sb.append(DbHandler.getLastRowAsString(this));
 
         // update UI
         handler.post(new Runnable() {
@@ -192,18 +177,4 @@ public class CellMapperMain extends Activity {
             }
         });
     }
-
-    private String getLastEntryString() {
-        Cursor cursor = db.rawQuery("SELECT datetime(time, 'unixepoch', 'localtime') AS LastEntry FROM " + TABLE
-                + " ORDER BY time DESC LIMIT 1", null);
-
-        String result = "";
-        if (cursor.moveToFirst()) {
-            result = cursor.getString(0);
-        }
-        cursor.close();
-
-        return result;
-    }
-
 }
