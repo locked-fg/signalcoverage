@@ -1,17 +1,17 @@
 package de.locked.cellmapper;
 
+import java.util.Iterator;
+import java.util.List;
+
 import android.app.Activity;
-import android.content.Context;
+import android.app.ActivityManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
-import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,118 +22,97 @@ import android.widget.ToggleButton;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
+    private static final int UI_REFRESH_INTERVAL = 5000;
 
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";
 
-    private static final long MIN_LOCATION_DISTANCE = 100; // m
-    // private static final SimpleDateFormat sdf = new
-    // SimpleDateFormat("y-MM-dd HH:mm:ss");
-
     private SQLiteDatabase db;
-    private DataListener dataListener;
-    private SharedPreferences preferences;
     private Thread refresher;
     private Handler handler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        handler = new Handler();
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        handler = new Handler();
         db = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
-        setupDB();
-        dataListener = new DataListener(this);
 
-        // set defaults once
+        // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.config, false);
+        startUiUpdates();
+        ensureServiceStarted();
 
         final ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
-        onOff.setChecked(true);
+        onOff.setChecked(isServiceRunning(DbLoggerService.class.getName()));
+
         onOff.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 if (!onOff.isChecked()) {
                     Log.i(LOG_TAG, "stopping");
-                    stop();
+                    stopService();
+                    stopUiUpdates();
                 } else {
                     Log.i(LOG_TAG, "starting");
-                    start();
+                    ensureServiceStarted();
+                    startUiUpdates();
                 }
             }
         });
 
-        start();
-    }
-
-    private void initPhoneListener() {
-        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        tm.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS | PhoneStateListener.LISTEN_CELL_LOCATION
-                | PhoneStateListener.LISTEN_DATA_CONNECTION_STATE | PhoneStateListener.LISTEN_SERVICE_STATE);
-    }
-
-    private void initLocationListener() {
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.removeUpdates(dataListener);
-
-        // Register the listener with the Location Manager
-        String updateIntervalString = preferences.getString(Preferences.update_interval, "300");
-        int updateInterval = 300;
-        try {
-            updateInterval = Integer.parseInt(updateIntervalString);
-        } catch (Exception e) {
-            Log.w(LOG_TAG, e.toString());
-        }
-        boolean useGPS = preferences.getBoolean(Preferences.use_gps, true);
-        if (useGPS) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, updateInterval, MIN_LOCATION_DISTANCE,
-                    dataListener);
-        }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, updateInterval, MIN_LOCATION_DISTANCE,
-                dataListener);
-    }
-
-    private void setupDB() {
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE + "(" + //
-                // location
-                " time INT PRIMARY KEY, " + //
-                " accuracy REAL, " + //
-                " altitude REAL, " + //
-                " satellites INT, " + //
-                " latitude REAL, " + //
-                " longitude REAL," + //
-                " speed REAL, " + //
-                // signal
-                " cdmaDbm INT, " + //
-                " evdoDbm INT, " + //
-                " evdoSnr INT, " + //
-                " signalStrength INT " + //
-                " );");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        stop();
-        start();
+        startUiUpdates();
     }
 
-    protected void start() {
-        initLocationListener();
-        initPhoneListener();
+    @Override
+    protected void onPause() {
+        super.onPause();
 
-        // refresh();
+        stopUiUpdates();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        stopUiUpdates();
+        stopService();
+    }
+
+    protected void stopService() {
+        stopService(new Intent(this, DbLoggerService.class));
+    }
+
+    private void ensureServiceStarted() {
+        if (!isServiceRunning(DbLoggerService.class.getName())) {
+            startService(new Intent(this, DbLoggerService.class));
+        }
+    }
+
+    protected void startUiUpdates() {
+        // do nothing if we're alive
+        if (refresher != null && refresher.isAlive()) {
+            return;
+        }
+
         refresher = new Thread() {
             @Override
             public void run() {
                 try {
+                    Looper.prepare();
                     while (!interrupted()) {
                         refresh();
-                        sleep(5000); // all 5s
+                        sleep(UI_REFRESH_INTERVAL); // all 5s
+                        Looper.loop();
                     }
                 } catch (Exception e) {
                     Log.i(LOG_TAG, "interrupted refresh thread");
@@ -144,25 +123,29 @@ public class CellMapperMain extends Activity {
         refresher.start();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        stop();
-        // db.close();
-    }
-
-    private void stop() {
-        // unregister location
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.removeUpdates(dataListener);
-
-        // unregister telephone
-        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        tm.listen(dataListener, PhoneStateListener.LISTEN_NONE);
-
+    private void stopUiUpdates() {
         if (refresher != null) {
             refresher.interrupt();
+            refresher = null;
         }
+    }
+
+    private boolean isServiceRunning(String serviceName) {
+        Log.i(LOG_TAG, "check if service is running");
+        boolean serviceRunning = false;
+        ActivityManager am = (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(50);
+        Iterator<ActivityManager.RunningServiceInfo> i = l.iterator();
+        while (i.hasNext()) {
+            ActivityManager.RunningServiceInfo runningServiceInfo = i.next();
+
+            if (runningServiceInfo.service.getClassName().equals(serviceName)) {
+                serviceRunning = true;
+            }
+        }
+
+        Log.i(LOG_TAG, "service is running: " + serviceRunning);
+        return serviceRunning;
     }
 
     @Override
@@ -200,7 +183,6 @@ public class CellMapperMain extends Activity {
         cursor.close();
 
         // update UI
-
         handler.post(new Runnable() {
 
             @Override
