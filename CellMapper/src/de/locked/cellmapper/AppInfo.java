@@ -21,8 +21,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
-import android.widget.Toast;
+import android.widget.TextView;
 
 public class AppInfo extends Activity {
     private static final String LOG_TAG = AppInfo.class.getName();
@@ -32,7 +33,7 @@ public class AppInfo extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setContentView(R.layout.app_info);
+        setContentView(R.layout.activity_appinfo);
     }
 
     @Override
@@ -41,33 +42,30 @@ public class AppInfo extends Activity {
         Intent intent = getIntent();
         AccountManager accountManager = AccountManager.get(getApplicationContext());
         Account account = (Account) intent.getExtras().get("account");
+        accountManager.invalidateAuthToken(account.type, null);
         accountManager.getAuthToken(account, "ah", false, new GetAuthTokenCallback(), null);
     }
 
-    private class GetAuthTokenCallback implements AccountManagerCallback {
+    private class GetAuthTokenCallback implements AccountManagerCallback<Bundle> {
         @Override
-        public void run(AccountManagerFuture result) {
-            Bundle bundle;
+        public void run(AccountManagerFuture<Bundle> result) {
             try {
-                bundle = (Bundle) result.getResult();
+                Bundle bundle = result.getResult();
                 Intent intent = (Intent) bundle.get(AccountManager.KEY_INTENT);
-                if (intent != null) {
-                    // User input required
+                if (intent != null) { // User input required
                     Log.i(LOG_TAG, "user input required");
                     startActivity(intent);
+
                 } else {
                     Log.i(LOG_TAG, "got token");
                     onGetAuthToken(bundle);
                 }
             } catch (OperationCanceledException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             } catch (AuthenticatorException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             } catch (IOException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             }
         }
     }
@@ -84,8 +82,8 @@ public class AppInfo extends Activity {
                 // Don't follow redirects
                 http_client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
 
-                HttpGet httpGet = new HttpGet("https://my-reception-map.appspot.com/_ah/login?continue=http://localhost/&auth="
-                        + tokens[0]);
+                HttpGet httpGet = new HttpGet(
+                        "https://my-reception-map.appspot.com/_ah/login?continue=http://localhost/&auth=" + tokens[0]);
                 HttpResponse response = http_client.execute(httpGet);
                 if (response.getStatusLine().getStatusCode() != 302) {
                     // Response should be a redirect
@@ -99,10 +97,8 @@ public class AppInfo extends Activity {
                 }
             } catch (ClientProtocolException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             } catch (IOException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             } finally {
                 http_client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
             }
@@ -111,7 +107,7 @@ public class AppInfo extends Activity {
 
         @Override
         protected void onPostExecute(Boolean result) {
-            new AuthenticatedRequestTask().execute("http://my-reception-map.appspot.com/admin/");
+            new AuthenticatedRequestTask().execute("http://my-reception-map.appspot.com/upload");
         }
     }
 
@@ -123,32 +119,40 @@ public class AppInfo extends Activity {
                 return http_client.execute(http_get);
             } catch (ClientProtocolException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             } catch (IOException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(HttpResponse result) {
+            if (result == null || result.getEntity() == null){
+                Log.w(LOG_TAG, "null response");
+                return;
+            }
             try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(result.getEntity().getContent()));
-                String content = "";
+                BufferedReader reader = new BufferedReader(new InputStreamReader(result.getEntity().getContent()), 4096);
+                StringBuilder content = new StringBuilder(4096);
                 String line;
-                while((line = reader.readLine()) != null){
-                    content += line;
+                int max = 10000;
+                while (max-- > 0 && (line = reader.readLine()) != null) {
+//                    Log.d(LOG_TAG, line);
+                    content.append(line).append(" \n");
+                }
+                if (max == 0){
+                    Log.w(LOG_TAG, "max line count reached");
                 }
                 reader.close();
-                Toast.makeText(getApplicationContext(), content, Toast.LENGTH_LONG).show();
-
+//                Toast.makeText(getApplicationContext(), content, Toast.LENGTH_LONG).show();
+                
+                TextView textview = (TextView) findViewById(R.id.textview);
+                textview.setText(Html.fromHtml(content.toString()));
+                
             } catch (IllegalStateException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             } catch (IOException e) {
                 Log.w(LOG_TAG, e.getMessage());
-                e.printStackTrace();
             }
         }
     }

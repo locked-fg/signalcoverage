@@ -160,7 +160,7 @@ public class CellMapperMain extends Activity {
             startActivity(new Intent(this, ConfigActivity.class));
             return true;
         case R.id.menu_upload:
-            startActivity(new Intent(this, UploadActivity.class));
+            startActivity(new Intent(this, ChooseAccountActivity.class));
             return true;
         }
         return false;

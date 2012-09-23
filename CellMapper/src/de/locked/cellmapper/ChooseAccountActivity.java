@@ -9,8 +9,8 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class UploadActivity extends ListActivity  {
-    private static final String LOG_TAG = UploadActivity.class.getName();
+public class ChooseAccountActivity extends ListActivity  {
+    private static final String LOG_TAG = ChooseAccountActivity.class.getName();
 
     protected AccountManager accountManager;
     protected Intent intent;
@@ -20,6 +20,7 @@ public class UploadActivity extends ListActivity  {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload);
+        
         accountManager = AccountManager.get(getApplicationContext());
         Account[] accounts = accountManager.getAccountsByType("com.google");
         this.setListAdapter(new ArrayAdapter(this, android.R.layout.test_list_item, accounts));

@@ -29,7 +29,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ConfigActivity" />
-        <activity android:name=".UploadActivity" />
+        <activity android:name=".ChooseAccountActivity" />
         <activity android:name=".AppInfo" />
         
         <service

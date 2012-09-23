@@ -6,12 +6,28 @@
     android:gravity="top"
     android:orientation="vertical" >
 
-    <ToggleButton
-        android:id="@+id/onOffButton"
+    <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textOff="Off"
-        android:textOn="On" />
+        android:layout_height="wrap_content" >
+
+        <ToggleButton
+            android:id="@+id/onOffButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight=".5"
+            android:textOff="@string/serviceOff"
+            android:textOn="@string/serviceOn" />
+
+        <ToggleButton
+            android:id="@+id/toggleScreenButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight=".5"
+            android:text="ToggleButton"
+            android:textOff="@string/screenOff"
+            android:textOn="@string/screenOn" />
+
+    </LinearLayout>
 
     <EditText
         android:id="@+id/textfield"
