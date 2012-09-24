@@ -40,9 +40,9 @@ public class AppInfo extends Activity {
     protected void onResume() {
         super.onResume();
         Intent intent = getIntent();
+
         AccountManager accountManager = AccountManager.get(getApplicationContext());
         Account account = (Account) intent.getExtras().get("account");
-        accountManager.invalidateAuthToken(account.type, null);
         accountManager.getAuthToken(account, "ah", false, new GetAuthTokenCallback(), null);
     }
 
@@ -55,7 +55,6 @@ public class AppInfo extends Activity {
                 if (intent != null) { // User input required
                     Log.i(LOG_TAG, "user input required");
                     startActivity(intent);
-
                 } else {
                     Log.i(LOG_TAG, "got token");
                     onGetAuthToken(bundle);
@@ -91,7 +90,7 @@ public class AppInfo extends Activity {
                 }
 
                 for (Cookie cookie : http_client.getCookieStore().getCookies()) {
-                    if (cookie.getName().equals("ACSID")) {
+                    if (cookie.getName().equals("ACSID") || cookie.getName().equals("SACSID")) {
                         return true;
                     }
                 }
@@ -107,7 +106,7 @@ public class AppInfo extends Activity {
 
         @Override
         protected void onPostExecute(Boolean result) {
-            new AuthenticatedRequestTask().execute("http://my-reception-map.appspot.com/upload");
+            new AuthenticatedRequestTask().execute("https://my-reception-map.appspot.com/upload");
         }
     }
 
@@ -127,7 +126,7 @@ public class AppInfo extends Activity {
 
         @Override
         protected void onPostExecute(HttpResponse result) {
-            if (result == null || result.getEntity() == null){
+            if (result == null || result.getEntity() == null) {
                 Log.w(LOG_TAG, "null response");
                 return;
             }
@@ -137,18 +136,19 @@ public class AppInfo extends Activity {
                 String line;
                 int max = 10000;
                 while (max-- > 0 && (line = reader.readLine()) != null) {
-//                    Log.d(LOG_TAG, line);
+                    // Log.d(LOG_TAG, line);
                     content.append(line).append(" \n");
                 }
-                if (max == 0){
+                if (max == 0) {
                     Log.w(LOG_TAG, "max line count reached");
                 }
                 reader.close();
-//                Toast.makeText(getApplicationContext(), content, Toast.LENGTH_LONG).show();
-                
+                // Toast.makeText(getApplicationContext(), content,
+                // Toast.LENGTH_LONG).show();
+
                 TextView textview = (TextView) findViewById(R.id.textview);
                 textview.setText(Html.fromHtml(content.toString()));
-                
+
             } catch (IllegalStateException e) {
                 Log.w(LOG_TAG, e.getMessage());
             } catch (IOException e) {

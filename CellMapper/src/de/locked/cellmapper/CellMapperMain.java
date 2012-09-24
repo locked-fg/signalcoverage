@@ -3,8 +3,6 @@ package de.locked.cellmapper;
 import java.util.Iterator;
 import java.util.List;
 
-import de.locked.cellmapper.model.DbHandler;
-
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Intent;
@@ -19,6 +17,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+import de.locked.cellmapper.model.DbHandler;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
@@ -59,7 +58,6 @@ public class CellMapperMain extends Activity {
                 }
             }
         });
-
     }
 
     @Override
