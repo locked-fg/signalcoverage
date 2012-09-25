@@ -1,7 +1,5 @@
 package de.locked.cellmapper;
 
-import de.locked.cellmapper.model.DataListener;
-import de.locked.cellmapper.model.Preferences;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +10,8 @@ import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import de.locked.cellmapper.model.DataListener;
+import de.locked.cellmapper.model.Preferences;
 
 public class DbLoggerService extends Service {
     private static final String LOG_TAG = DbLoggerService.class.getName();
@@ -49,10 +49,6 @@ public class DbLoggerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    protected void getUpdateLocation() {
-        Log.i(LOG_TAG, "update location");
     }
 
     /**
