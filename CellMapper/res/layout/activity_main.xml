@@ -17,15 +17,6 @@
             android:layout_weight=".5"
             android:textOff="@string/serviceOff"
             android:textOn="@string/serviceOn" />
-
-        <ToggleButton
-            android:id="@+id/toggleScreenButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight=".5"
-            android:text="ToggleButton"
-            android:textOff="@string/screenOff"
-            android:textOn="@string/screenOn" />
 
     </LinearLayout>
 

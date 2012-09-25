@@ -9,8 +9,6 @@
     <string name="useGPS">GPS verwenden</string>
     <string name="configButton">Config</string>
     
-	<string name="screenOn">Force Screen On</string>
-	<string name="screenOff">Allow Screen Off</string>
 	<string name="serviceOn">Service On</string>
 	<string name="serviceOff">Service Off</string>
 </resources>

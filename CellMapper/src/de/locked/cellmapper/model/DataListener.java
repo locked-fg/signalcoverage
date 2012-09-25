@@ -18,9 +18,11 @@ public class DataListener extends PhoneStateListener implements LocationListener
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";
 
+    private static final long ALLOW_STALE_LOCATION = 5000; // ms
     private final Context context;
     private final LocationManager locationManager;
 
+    private Location lastLocation = null;
     private SignalStrength signal;
 
     public DataListener(Context context) {
@@ -30,12 +32,33 @@ public class DataListener extends PhoneStateListener implements LocationListener
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(LOG_TAG, "loction update received");
+        Log.i(LOG_TAG, "loction update received");
 
+        if (location == null){
+            return;
+        }
+        if (lastLocation == null) {
+            lastLocation = location;
+        }
+
+        // compare
+        long lastTime = lastLocation.getTime();
+        float lastAccuracy = lastLocation.getAccuracy();
+
+        long currentTime = location.getTime();
+        float currentAccuracy = location.getAccuracy();
+
+        // location updates within short time should only update the DB if the
+        // accuracy is better
+        if (Math.abs(currentTime - lastTime) < ALLOW_STALE_LOCATION && currentAccuracy > lastAccuracy) {
+            return;
+        }
+
+        lastLocation = location;
         GpsStatus gpsStatus = locationManager.getGpsStatus(null);
         int satellites = countSatellites(gpsStatus);
-        Data data = new Data(location, signal, gpsStatus, satellites);
 
+        Data data = new Data(location, signal, gpsStatus, satellites);
         DbHandler.save(data, context);
     }
 
