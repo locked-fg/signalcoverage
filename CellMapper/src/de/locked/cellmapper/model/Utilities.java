@@ -3,7 +3,6 @@ package de.locked.cellmapper.model;
 import android.app.Activity;
 import android.content.Context;
 import android.provider.Settings;
-import android.view.WindowManager;
 
 public class Utilities {
     /**
@@ -24,11 +23,9 @@ public class Utilities {
         return s;
     }
 
+    @Deprecated
     public static void setKeepScreenOn(Activity activity, boolean keepScreenOn) {
-        if (keepScreenOn) {
-            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        } else {
-            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
+        activity.getCurrentFocus().setKeepScreenOn(keepScreenOn);
     }
+
 }

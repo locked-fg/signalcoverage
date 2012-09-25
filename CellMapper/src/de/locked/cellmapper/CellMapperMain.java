@@ -41,8 +41,6 @@ public class CellMapperMain extends Activity {
         ensureServiceStarted();
 
         final ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
-        onOff.setChecked(isServiceRunning(DbLoggerService.class.getName()));
-
         onOff.setOnClickListener(new OnClickListener() {
 
             @Override
@@ -58,6 +56,15 @@ public class CellMapperMain extends Activity {
                 }
             }
         });
+
+        final ToggleButton screenToggle = (ToggleButton) findViewById(R.id.toggleScreenButton);
+        screenToggle.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                getCurrentFocus().setKeepScreenOn(screenToggle.isChecked());
+            }
+        });
     }
 
     @Override
@@ -65,6 +72,12 @@ public class CellMapperMain extends Activity {
         super.onResume();
         Log.i(LOG_TAG, "resume activity");
 
+        final ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
+        onOff.setChecked(isServiceRunning(DbLoggerService.class.getName()));
+        
+        final ToggleButton screenToggle = (ToggleButton) findViewById(R.id.toggleScreenButton);
+        screenToggle.setChecked(getCurrentFocus().getKeepScreenOn());
+        
         startUiUpdates();
     }
 
