@@ -112,7 +112,7 @@ public class DbHandler {
     public static String getLastRowAsString(Context context) {
         SQLiteDatabase db = setupDB(context);
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE + " ORDER BY time DESC LIMIT 1", null);
-        
+
         StringBuilder sb = new StringBuilder(64);
         if (cursor.moveToFirst()) {
             for (int i = 0; i < cursor.getColumnCount(); i++) {
@@ -126,7 +126,19 @@ public class DbHandler {
         }
         cursor.close();
         db.close();
-        
+
         return sb.toString();
+    }
+
+    public static int getRows(Context context) {
+        SQLiteDatabase db = setupDB(context);
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE, null);
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return count;
     }
 }

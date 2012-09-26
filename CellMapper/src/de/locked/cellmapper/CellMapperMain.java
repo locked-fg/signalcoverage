@@ -163,9 +163,10 @@ public class CellMapperMain extends Activity {
     }
 
     private void refresh() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(DbHandler.getLastEntryString(this));
-        sb.append("\n------\n");
+        final StringBuilder sb = new StringBuilder(100);
+        sb.append(DbHandler.getLastEntryString(this)).append("\n");
+        sb.append("Data rows: "+DbHandler.getRows(this)).append("\n");
+        sb.append("------\n");
         sb.append(DbHandler.getLastRowAsString(this));
 
         // update UI
