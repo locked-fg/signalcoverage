@@ -2,7 +2,6 @@
 <resources>
 
     <string-array name="updateInterval">
-        <item>15 sec</item>
         <item>30 sec</item>
         <item>1 min</item>
         <item>5 min</item>
@@ -12,7 +11,6 @@
         <item>1 std</item>
     </string-array>
     <string-array name="updateIntervalValues">
-        <item>15</item>
         <item>30</item>
         <item>60</item>
         <item>300</item>
