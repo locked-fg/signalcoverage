@@ -6,6 +6,9 @@ import java.util.List;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.NetworkInfo.State;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -33,6 +36,8 @@ public class CellMapperMain extends Activity {
 
         setContentView(R.layout.activity_main);
 
+        networkInfo();
+        
         handler = new Handler();
 
         // set defaults
@@ -56,6 +61,21 @@ public class CellMapperMain extends Activity {
                 }
             }
         });
+    }
+
+    private void networkInfo() {
+        ConnectivityManager service = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo a = service.getActiveNetworkInfo();
+        
+        String extraInfo = a.getExtraInfo(); // eplus.de
+        State state = a.getState(); // http://developer.android.com/reference/android/net/NetworkInfo.State.html
+        String typeName = a.getTypeName(); // mobile
+        String subtypeName = a.getSubtypeName(); // HSDPA
+
+        Log.i(LOG_TAG, "extra: "+extraInfo);
+        Log.i(LOG_TAG, "state: "+state.toString());
+        Log.i(LOG_TAG, "type: "+typeName);
+        Log.i(LOG_TAG, "subtype: "+subtypeName);
     }
 
     @Override
