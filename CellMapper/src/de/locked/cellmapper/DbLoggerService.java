@@ -22,7 +22,7 @@ public class DbLoggerService extends Service {
     // meters
     private final float LOCATION_DISTANCE_INTERVAL = 50; // m
     // parameter passed to location listener to get an update every this many
-    // seconds
+    // milliseconds
     private final long LOCATION_TIME_INTERVAL = 3000; // ms
 
     // keep the location lister that long active before unregistering again
@@ -109,12 +109,6 @@ public class DbLoggerService extends Service {
         final long updateInterval = getUpdateInterval();
         Log.i(LOG_TAG, "update interval: " + updateInterval + "ms");
 
-        // sanity check
-        if (updateInterval - MEASURE_DURATION <= 0) {
-            throw new IllegalArgumentException("update interval too small " + updateInterval + " vs "
-                    + MEASURE_DURATION);
-        }
-
         runner = new Thread() {
 
             @Override
@@ -132,8 +126,8 @@ public class DbLoggerService extends Service {
                         removeListener();
 
                         // set asleep and wait for the next iteration
-                        Log.i(LOG_TAG, "wait for next iteration in " + (updateInterval - MEASURE_DURATION) + "ms");
-                        sleep(updateInterval - MEASURE_DURATION);
+                        Log.i(LOG_TAG, "wait for next iteration in " + updateInterval + "ms");
+                        sleep(updateInterval);
                     }
                     Looper.loop();
                 } catch (InterruptedException e) {
@@ -142,20 +136,6 @@ public class DbLoggerService extends Service {
             }
         };
         runner.start();
-
-        // LocationManager locationManager = (LocationManager)
-        // getSystemService(Context.LOCATION_SERVICE);
-        // Log.i(LOG_TAG, "request updates every " + updateInterval + "ms / " +
-        // MIN_LOCATION_DISTANCE + "m");
-        //
-        // if (useGPS) {
-        // locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-        // updateInterval, MIN_LOCATION_DISTANCE,
-        // dataListener);
-        // }
-        // locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-        // updateInterval, MIN_LOCATION_DISTANCE,
-        // dataListener);
     }
 
     private void updateLocation() {
