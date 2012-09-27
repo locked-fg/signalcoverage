@@ -23,7 +23,7 @@ public class DbLoggerService extends Service {
     private final float LOCATION_DISTANCE_INTERVAL = 50; // m
     // parameter passed to location listener to get an update every this many
     // milliseconds
-    private final long LOCATION_TIME_INTERVAL = 3000; // ms
+    private final long LOCATION_TIME_INTERVAL = 5000; // ms
 
     // keep the location lister that long active before unregistering again
     // thanx htc Desire + cyanogen mod
