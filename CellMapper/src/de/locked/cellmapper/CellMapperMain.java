@@ -99,6 +99,7 @@ public class CellMapperMain extends Activity {
         super.onDestroy();
         Log.i(LOG_TAG, "destroy activity");
 
+        DbHandler.close();
         stopUiUpdates();
         stopService();
     }

@@ -7,38 +7,52 @@ import java.util.Locale;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import de.locked.cellmapper.model.DataListener.Data;
 
 public class DbHandler {
+    private static final int ALLOWED_TIME_DRIFT = 3000;
     public static final String LOG_TAG = DbHandler.class.getName();
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("y-MM-dd HH:mm:ss");
 
-    public static SQLiteDatabase setupDB(Context context) {
-        SQLiteDatabase db = context.openOrCreateDatabase(DB_NAME, Activity.MODE_PRIVATE, null);
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE + "(" + //
-                // location
-                " time INT PRIMARY KEY, " + //
-                " accuracy REAL, " + //
-                " altitude REAL, " + //
-                " satellites INT, " + //
-                " latitude REAL, " + //
-                " longitude REAL," + //
-                " speed REAL, " + //
-                // signal
-                " cdmaDbm INT, " + //
-                " evdoDbm INT, " + //
-                " evdoSnr INT, " + //
-                " signalStrength INT " + //
-                " );");
-        return db;
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("y-MM-dd HH:mm:ss");
+    private static SQLiteDatabase db = null;
+
+    private static void setupDB(Context context) {
+        if (db == null || !db.isOpen()) {
+            Log.i(LOG_TAG, "opening db");
+            db = context.openOrCreateDatabase(DB_NAME, Activity.MODE_PRIVATE, null);
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE + "(" + //
+                    // location
+                    " time INT PRIMARY KEY, " + //
+                    " accuracy REAL, " + //
+                    " altitude REAL, " + //
+                    " satellites INT, " + //
+                    " latitude REAL, " + //
+                    " longitude REAL," + //
+                    " speed REAL, " + //
+                    // signal
+                    " cdmaDbm INT, " + //
+                    " evdoDbm INT, " + //
+                    " evdoSnr INT, " + //
+                    " signalStrength INT " + //
+                    " );");
+        }
+    }
+
+    public static void close() {
+        if (db != null && db.isOpen()) {
+            Log.i(LOG_TAG, "closing DB");
+            db.close();
+            db = null;
+        }
     }
 
     public static String getLastEntryString(Context context) {
-        SQLiteDatabase db = setupDB(context);
+        setupDB(context);
         Cursor cursor = db.rawQuery("SELECT datetime(time, 'unixepoch', 'localtime') AS LastEntry FROM " + TABLE
                 + " ORDER BY time DESC LIMIT 1", null);
 
@@ -47,7 +61,6 @@ public class DbHandler {
             result = cursor.getString(0);
         }
         cursor.close();
-        db.close();
 
         return result;
     }
@@ -56,8 +69,7 @@ public class DbHandler {
         if (data.location == null || data.signal == null) {
             return;
         }
-
-        SQLiteDatabase db = DbHandler.setupDB(context);
+        setupDB(context);
 
         // all location data
         long time = data.location.getTime();
@@ -68,6 +80,13 @@ public class DbHandler {
         double latitude = data.location.getLatitude();
         double longitude = data.location.getLongitude();
         float speed = data.location.getSpeed();
+
+        // strange: I logged updates for timestamps ~12h ago right after a
+        // regula timestamp
+        if (time < System.currentTimeMillis() - ALLOWED_TIME_DRIFT) {
+            Log.i(LOG_TAG, "out of date location ignored: " + sdf.format(new Date(time)));
+            return;
+        }
 
         // /data/data/de.locked.cellmapper/databases/CellMapper
         // sqlite> select datetime(time, 'unixepoch', 'localtime') FROM Base
@@ -102,15 +121,17 @@ public class DbHandler {
             }
             Log.i(LOG_TAG, "transaction successfull");
             db.setTransactionSuccessful();
+        } catch (SQLException e) {
+            Log.e(LOG_TAG, e.getMessage(), e);
         } finally {
             db.endTransaction();
+            int bytes = SQLiteDatabase.releaseMemory();
+            Log.d(LOG_TAG, "released " + bytes + "bytes");
         }
-
-        db.close();
     }
 
     public static String getLastRowAsString(Context context) {
-        SQLiteDatabase db = setupDB(context);
+        setupDB(context);
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE + " ORDER BY time DESC LIMIT 1", null);
 
         StringBuilder sb = new StringBuilder(64);
@@ -125,20 +146,18 @@ public class DbHandler {
             }
         }
         cursor.close();
-        db.close();
 
         return sb.toString();
     }
 
     public static int getRows(Context context) {
-        SQLiteDatabase db = setupDB(context);
+        setupDB(context);
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE, null);
         int count = 0;
         if (cursor.moveToFirst()) {
             count = cursor.getInt(0);
         }
         cursor.close();
-        db.close();
         return count;
     }
 }
