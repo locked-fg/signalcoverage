@@ -13,7 +13,7 @@ import android.util.Log;
 import de.locked.cellmapper.model.DataListener.Data;
 
 public class DbHandler {
-    private static final int ALLOWED_TIME_DRIFT = 3000;
+    private static final int ALLOWED_TIME_DRIFT = 30000;
     public static final String LOG_TAG = DbHandler.class.getName();
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";
