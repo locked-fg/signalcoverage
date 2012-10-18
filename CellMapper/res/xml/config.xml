@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
     <CheckBoxPreference android:summary="use GPS for fine positioning" android:key="use_gps" android:title="GPS on" android:enabled="true"/>
-    <ListPreference android:entryValues="@array/updateIntervalValues" android:key="update_interval" android:entries="@array/updateInterval" android:title="Update Interval" android:summary="How often to refresh your location"/>
+    <ListPreference android:entryValues="@array/updateIntervalValues" android:key="update_duration" android:entries="@array/updateInterval" android:title="Update Duration" android:summary="Listen this long for updates until setting asleep" android:defaultValue="60"/>
+    <ListPreference android:summary="Time between measurements (reduce power consumption)" android:entryValues="@array/sleepBetweenLocationValues" android:key="sleep_between_measures" android:entries="@array/sleepBetweenLocationEntries" android:title="Sleep between updates" android:defaultValue="1"/>
+    <PreferenceCategory android:summary="Minimum time and location difference for updates" android:title="Location updates">
+        <ListPreference android:summary="minimum time between updates" android:key="min_location_time" android:title="Min time" android:entryValues="@array/minLocationTimeValues" android:entries="@array/minLocationTimeEntries"/>
+        <ListPreference android:key="min_location_dist" android:title="Min distance" android:summary="minimum distance between updates" android:entryValues="@array/minLocationDistValues" android:entries="@array/minLocationDistEntries"/>
+    </PreferenceCategory>
 
 </PreferenceScreen>

@@ -20,14 +20,15 @@ public class DbLoggerService extends Service {
 
     // parameter passed to location listener to get an update every this many
     // meters
-    private final float LOCATION_DISTANCE_INTERVAL = 50; // m
+    private float minLocationDistance = 50; // m
     // parameter passed to location listener to get an update every this many
     // milliseconds
-    private final long LOCATION_TIME_INTERVAL = 5000; // ms
+    private long minLocationTime = 5000; // ms
 
     // keep the location lister that long active before unregistering again
     // thanx htc Desire + cyanogen mod
-    private final long MEASURE_DURATION = 30000; // ms
+    private long sleepBetweenMeasures = 30000; // ms
+    private long sleepForMeasures = 30000; // ms
 
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
@@ -55,6 +56,13 @@ public class DbLoggerService extends Service {
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 Log.i(LOG_TAG, "preferences changed - restarting");
                 useGPS = preferences.getBoolean(Preferences.use_gps, true);
+
+                sleepBetweenMeasures = getAsLong(Preferences.sleep_between_measures, "30") * 1000l;
+                sleepForMeasures = getAsLong(Preferences.update_duration, "30") * 1000l;
+
+                minLocationTime = getAsLong(Preferences.min_location_time, "60") * 1000l;
+                minLocationDistance = getAsLong(Preferences.min_location_distance, "50");
+
                 stop();
                 start();
             }
@@ -89,26 +97,18 @@ public class DbLoggerService extends Service {
         return null;
     }
 
-    /**
-     * return interval in ms
-     * 
-     * @return
-     */
-    private long getUpdateInterval() {
-        String updateIntervalString = preferences.getString(Preferences.update_interval, "300"); // s
-        int interval = 300;
+    private long getAsLong(String key, String def) {
+        String value = preferences.getString(key, def); // s
+        long interval = 0;
         try {
-            interval = Integer.parseInt(updateIntervalString);
+            interval = Long.parseLong(value);
         } catch (Exception e) {
+            Log.e(LOG_TAG, "value could not be parsed to long: " + key + " > " + value);
         }
-        return interval * 1000l; // s -> ms!
+        return interval;
     }
 
     private void start() {
-        // Register the listener with the Location Manager
-        final long updateInterval = getUpdateInterval();
-        Log.i(LOG_TAG, "update interval: " + updateInterval + "ms");
-
         runner = new Thread() {
 
             @Override
@@ -116,29 +116,31 @@ public class DbLoggerService extends Service {
                 try {
                     Looper.prepare();
                     while (!isInterrupted()) {
-                        Log.i(LOG_TAG, "start location iteration");
+                        Log.i(LOG_TAG, "start location listening");
                         addListener();
 
                         // set asleep and get some location information
-                        Log.i(LOG_TAG, "wait " + MEASURE_DURATION + "ms for location updates");
-                        sleep(MEASURE_DURATION);
-                        updateLocation();
-                        removeListener();
+                        Log.i(LOG_TAG, "wait " + sleepForMeasures + "ms for location updates");
+                        sleep(sleepForMeasures);
+
+                        Log.i(LOG_TAG, "force location updates");
+                        forceUpdateLocation();
 
                         // set asleep and wait for the next iteration
-                        Log.i(LOG_TAG, "wait for next iteration in " + updateInterval + "ms");
-                        sleep(updateInterval);
+                        Log.i(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
+                        removeListener();
+                        sleep(sleepBetweenMeasures);
                     }
                     Looper.loop();
                 } catch (InterruptedException e) {
-                    Log.i(LOG_TAG, "interrupting location thread");
+                    Log.i(LOG_TAG, "location thread interrupted");
                 }
             }
         };
         runner.start();
     }
 
-    private void updateLocation() {
+    private void forceUpdateLocation() {
         // bypass the listener
         Location location;
         location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -161,11 +163,11 @@ public class DbLoggerService extends Service {
         // init location listeners
         boolean useGPS = preferences.getBoolean(Preferences.use_gps, true);
         if (useGPS) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_TIME_INTERVAL,
-                    LOCATION_DISTANCE_INTERVAL, dataListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
+                    dataListener);
         }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_TIME_INTERVAL,
-                LOCATION_DISTANCE_INTERVAL, dataListener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime, minLocationDistance,
+                dataListener);
     }
 
     private void removeListener() {
@@ -176,5 +178,4 @@ public class DbLoggerService extends Service {
         // unregister telephone
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
     }
-
 }

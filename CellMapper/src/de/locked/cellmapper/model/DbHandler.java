@@ -82,8 +82,8 @@ public class DbHandler {
         float speed = data.location.getSpeed();
 
         // strange: I logged updates for timestamps ~12h ago right after a
-        // regula timestamp
-        if (time < System.currentTimeMillis() - ALLOWED_TIME_DRIFT) {
+        // regular timestamp
+        if (Math.abs(time - System.currentTimeMillis()) > ALLOWED_TIME_DRIFT) {
             Log.i(LOG_TAG, "out of date location ignored: " + sdf.format(new Date(time)));
             return;
         }

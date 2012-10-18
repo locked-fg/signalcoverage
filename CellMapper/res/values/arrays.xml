@@ -19,5 +19,65 @@
         <item>2700</item>
         <item>3600</item>
     </string-array>
+    
+    <string-array name="minLocationTimeEntries">
+        <item>Off</item>
+        <item>5 s</item>
+        <item>15 s</item>
+        <item>30 s</item>
+        <item>1 m</item>
+        <item>5 m</item>
+        <item>15 m</item>
+        <item>30 m</item>
+    </string-array>
+    <string-array name="minLocationTimeValues">
+        <item>0</item>
+        <item>5</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>300</item>
+        <item>900</item>
+    </string-array>
+    
+    <string-array name="minLocationDistEntries">
+        <item>Off</item>
+        <item>5 m</item>
+        <item>50 m</item>
+        <item>100 m</item>
+        <item>250 m</item>
+        <item>500 m</item>
+        <item>1 km</item>
+        </string-array>
+    <string-array name="minLocationDistValues">
+        <item>0</item>
+        <item>5</item>
+        <item>50</item>
+        <item>100</item>
+        <item>250</item>
+        <item>500</item>
+        <item>1000</item>
+    </string-array>
 
+    <string-array name="sleepBetweenLocationEntries">
+        <item>Off</item>
+        <item>1 s</item>
+        <item>5 s</item>
+        <item>15 s</item>
+        <item>30 s</item>
+        <item>1 m</item>
+        <item>5 m</item>
+        <item>15 m</item>
+        <item>30 m</item>
+    </string-array>
+    <string-array name="sleepBetweenLocationValues">
+        <item>0</item>
+        <item>1</item>
+        <item>5</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>300</item>
+        <item>900</item>
+    </string-array>
 </resources>

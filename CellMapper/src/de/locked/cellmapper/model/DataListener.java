@@ -18,11 +18,9 @@ public class DataListener extends PhoneStateListener implements LocationListener
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";
 
-//    private static final long ALLOW_STALE_LOCATION = 3000; // ms
     private final Context context;
     private final LocationManager locationManager;
 
-//    private Location lastLocation = null;
     private SignalStrength signal;
 
     public DataListener(Context context) {
