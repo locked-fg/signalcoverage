@@ -24,7 +24,7 @@ import de.locked.cellmapper.model.DbHandler;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
-    private static final int UI_REFRESH_INTERVAL = 5000;
+    private static final int UI_REFRESH_INTERVAL = 2000;
 
     private Thread refresher;
     private Handler handler;
@@ -127,7 +127,7 @@ public class CellMapperMain extends Activity {
                     Looper.prepare();
                     while (!interrupted()) {
                         refresh();
-                        sleep(UI_REFRESH_INTERVAL); // all 5s
+                        sleep(UI_REFRESH_INTERVAL); // all Xs
                     }
                     Looper.loop();
                 } catch (Exception e) {
