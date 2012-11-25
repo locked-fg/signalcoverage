@@ -28,7 +28,7 @@ public class DbLoggerService extends Service {
     // keep the location lister that long active before unregistering again
     // thanx htc Desire + cyanogen mod
     private long sleepBetweenMeasures = 30000; // ms
-    private long sleepForMeasures = 30000; // ms
+    private long updateDuration = 30000; // ms
 
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
@@ -37,6 +37,29 @@ public class DbLoggerService extends Service {
     private SharedPreferences preferences;
     private DataListener dataListener;
     private Thread runner;
+
+    class PreferenceLoader implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            Log.i(LOG_TAG, "preferences changed - restarting");
+            useGPS = preferences.getBoolean(Preferences.use_gps, true);
+
+            sleepBetweenMeasures = getAsLong(Preferences.sleep_between_measures, "30") * 1000l;
+            updateDuration = getAsLong(Preferences.update_duration, "30") * 1000l;
+
+            minLocationTime = getAsLong(Preferences.min_location_time, "60") * 1000l;
+            minLocationDistance = getAsLong(Preferences.min_location_distance, "50");
+
+            // ensure a minimum value
+            if (minLocationTime <= 1000) {
+                minLocationTime = 1000;
+            }
+
+            stop();
+            start();
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -50,26 +73,9 @@ public class DbLoggerService extends Service {
         dataListener = new DataListener(getApplicationContext());
 
         // restart on preference change
-        preferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
-
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                Log.i(LOG_TAG, "preferences changed - restarting");
-                useGPS = preferences.getBoolean(Preferences.use_gps, true);
-
-                sleepBetweenMeasures = getAsLong(Preferences.sleep_between_measures, "30") * 1000l;
-                sleepForMeasures = getAsLong(Preferences.update_duration, "30") * 1000l;
-
-                minLocationTime = getAsLong(Preferences.min_location_time, "60") * 1000l;
-                minLocationDistance = getAsLong(Preferences.min_location_distance, "50");
-
-                stop();
-                start();
-            }
-
-        });
-
-        start();
+        PreferenceLoader loader = new PreferenceLoader();
+        preferences.registerOnSharedPreferenceChangeListener(loader);
+        loader.onSharedPreferenceChanged(null, null);
     }
 
     @Override
@@ -87,7 +93,9 @@ public class DbLoggerService extends Service {
     }
 
     private void stop() {
-        runner.interrupt();
+        if (runner != null) {
+            runner.interrupt();
+        }
         runner = null;
         removeListener();
     }
@@ -109,6 +117,7 @@ public class DbLoggerService extends Service {
     }
 
     private void start() {
+        // this is the main thread
         runner = new Thread() {
 
             @Override
@@ -119,12 +128,25 @@ public class DbLoggerService extends Service {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
 
-                        // set asleep and get some location information
-                        Log.i(LOG_TAG, "wait " + sleepForMeasures + "ms for location updates");
-                        sleep(sleepForMeasures);
+                        // get a location every minLocationTime milliseconds
+                        final long end = System.currentTimeMillis() + updateDuration;
+                        Location last = getLocation();
+                        while (!isInterrupted() && System.currentTimeMillis() < end) {
+                            Location currentLocation = getLocation();
 
-                        Log.i(LOG_TAG, "force location updates");
-                        forceUpdateLocation();
+                            // location after null
+                            if (last == null && currentLocation != null) {
+                                dataListener.onLocationChanged(currentLocation);
+                            }
+                            // location after location
+                            if (last != null && currentLocation != null
+                                    && last.distanceTo(currentLocation) > minLocationDistance) {
+                                dataListener.onLocationChanged(currentLocation);
+                            }
+
+                            last = currentLocation;
+                            sleep(minLocationTime);
+                        }
 
                         // set asleep and wait for the next iteration
                         Log.i(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
@@ -140,16 +162,12 @@ public class DbLoggerService extends Service {
         runner.start();
     }
 
-    private void forceUpdateLocation() {
-        // bypass the listener
-        Location location;
-        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        dataListener.onLocationChanged(location);
-
+    private Location getLocation() {
+        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if (useGPS) {
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            dataListener.onLocationChanged(location);
         }
+        return location;
     }
 
     private void addListener() {

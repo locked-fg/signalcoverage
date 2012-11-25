@@ -21,7 +21,7 @@
     </string-array>
     
     <string-array name="minLocationTimeEntries">
-        <item>Off</item>
+        <item>1 s</item>
         <item>5 s</item>
         <item>15 s</item>
         <item>30 s</item>
@@ -31,7 +31,7 @@
         <item>30 m</item>
     </string-array>
     <string-array name="minLocationTimeValues">
-        <item>0</item>
+        <item>1</item>
         <item>5</item>
         <item>15</item>
         <item>30</item>
