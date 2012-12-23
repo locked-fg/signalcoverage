@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,7 +39,7 @@ public class CellMapperMain extends Activity {
         setContentView(R.layout.activity_main);
 
         networkInfo();
-        
+
         handler = new Handler();
 
         // set defaults
@@ -66,16 +68,21 @@ public class CellMapperMain extends Activity {
     private void networkInfo() {
         ConnectivityManager service = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo a = service.getActiveNetworkInfo();
-        
-        String extraInfo = a.getExtraInfo(); // eplus.de
-        State state = a.getState(); // http://developer.android.com/reference/android/net/NetworkInfo.State.html
-        String typeName = a.getTypeName(); // mobile
-        String subtypeName = a.getSubtypeName(); // HSDPA
+        if (a != null) {
+            String extraInfo = a.getExtraInfo(); // eplus.de
+            State state = a.getState(); // http://developer.android.com/reference/android/net/NetworkInfo.State.html
+            String typeName = a.getTypeName(); // mobile
+            String subtypeName = a.getSubtypeName(); // HSDPA
 
-        Log.i(LOG_TAG, "extra: "+extraInfo);
-        Log.i(LOG_TAG, "state: "+state.toString());
-        Log.i(LOG_TAG, "type: "+typeName);
-        Log.i(LOG_TAG, "subtype: "+subtypeName);
+            Log.i(LOG_TAG, "extra: " + extraInfo);
+            Log.i(LOG_TAG, "state: " + state.toString());
+            Log.i(LOG_TAG, "type: " + typeName);
+            Log.i(LOG_TAG, "subtype: " + subtypeName);
+        }
+
+        TelephonyManager telephonyManager = ((TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE));
+        String carrier = telephonyManager.getNetworkOperatorName();
+        Log.i(LOG_TAG, "carrier: " + carrier);
     }
 
     @Override
@@ -173,12 +180,12 @@ public class CellMapperMain extends Activity {
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.menu_settings:
-            startActivity(new Intent(this, ConfigActivity.class));
-            return true;
-        case R.id.menu_upload:
-            startActivity(new Intent(this, ChooseAccountActivity.class));
-            return true;
+            case R.id.menu_settings:
+                startActivity(new Intent(this, ConfigActivity.class));
+                return true;
+            case R.id.menu_upload:
+                startActivity(new Intent(this, ChooseAccountActivity.class));
+                return true;
         }
         return false;
     }
@@ -186,7 +193,7 @@ public class CellMapperMain extends Activity {
     private void refresh() {
         final StringBuilder sb = new StringBuilder(100);
         sb.append(DbHandler.getLastEntryString(this)).append("\n");
-        sb.append("Data rows: "+DbHandler.getRows(this)).append("\n");
+        sb.append("Data rows: " + DbHandler.getRows(this)).append("\n");
         sb.append("------\n");
         sb.append(DbHandler.getLastRowAsString(this));
 

@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 public class DataListener extends PhoneStateListener implements LocationListener {
@@ -35,7 +36,10 @@ public class DataListener extends PhoneStateListener implements LocationListener
         GpsStatus gpsStatus = locationManager.getGpsStatus(null);
         int satellites = countSatellites(gpsStatus);
 
-        Data data = new Data(location, signal, gpsStatus, satellites);
+        TelephonyManager telephonyManager = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
+        String carrier = telephonyManager.getNetworkOperatorName();
+        
+        Data data = new Data(location, signal, gpsStatus, satellites, carrier);
         DbHandler.save(data, context);
     }
 
@@ -70,18 +74,4 @@ public class DataListener extends PhoneStateListener implements LocationListener
     public void onStatusChanged(String provider, int status, Bundle extras) {
     }
 
-    public class Data {
-        public final Location location;
-        public final SignalStrength signal;
-        public final GpsStatus gpsStatus;
-        public final int satellites;
-
-        public Data(Location location, SignalStrength signal, GpsStatus gpsStatus, int satellites) {
-            super();
-            this.location = location;
-            this.signal = signal;
-            this.gpsStatus = gpsStatus;
-            this.satellites = satellites;
-        }
-    }
 }

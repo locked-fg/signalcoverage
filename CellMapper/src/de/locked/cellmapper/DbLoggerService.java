@@ -127,20 +127,25 @@ public class DbLoggerService extends Service {
                     while (!isInterrupted()) {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
+                        
 
                         // get a location every minLocationTime milliseconds
                         final long end = System.currentTimeMillis() + updateDuration;
                         Location last = getLocation();
+                        if (last != null){
+                            dataListener.onLocationChanged(last);
+                        }
+                        
                         while (!isInterrupted() && System.currentTimeMillis() < end) {
                             Location currentLocation = getLocation();
 
-                            // location after null
+                            // location after null -> always save
                             if (last == null && currentLocation != null) {
                                 dataListener.onLocationChanged(currentLocation);
                             }
-                            // location after location
+                            // location after location -> save if distance is large enough
                             if (last != null && currentLocation != null
-                                    && last.distanceTo(currentLocation) > minLocationDistance) {
+                                    && last.distanceTo(currentLocation) >= minLocationDistance) {
                                 dataListener.onLocationChanged(currentLocation);
                             }
 
@@ -166,6 +171,11 @@ public class DbLoggerService extends Service {
         Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if (useGPS) {
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        }
+        
+        // only use locations that are younger than 10s
+        if (location != null && Math.abs(location.getTime() - System.currentTimeMillis()) > 10000 ){
+            location = null;
         }
         return location;
     }

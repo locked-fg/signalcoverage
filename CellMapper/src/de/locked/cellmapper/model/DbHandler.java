@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-import de.locked.cellmapper.model.DataListener.Data;
 
 public class DbHandler {
     private static final int ALLOWED_TIME_DRIFT = 30000;
@@ -38,7 +37,8 @@ public class DbHandler {
                     " cdmaDbm INT, " + //
                     " evdoDbm INT, " + //
                     " evdoSnr INT, " + //
-                    " signalStrength INT " + //
+                    " signalStrength INT, " + //
+                    " carrier TEXT " + //
                     " );");
         }
     }
@@ -69,6 +69,12 @@ public class DbHandler {
         if (data.location == null || data.signal == null) {
             return;
         }
+
+        // can there be anything in airplane mode?
+        if (Utilities.isAirplaneModeOn(context)) {
+            return;
+        }
+
         setupDB(context);
 
         // all location data
@@ -80,6 +86,7 @@ public class DbHandler {
         double latitude = data.location.getLatitude();
         double longitude = data.location.getLongitude();
         float speed = data.location.getSpeed();
+        String carrier = data.carrier == null ? "" : data.carrier;
 
         // strange: I logged updates for timestamps ~12h ago right after a
         // regular timestamp
@@ -93,32 +100,23 @@ public class DbHandler {
         // ORDER BY TIME DESC LIMIT 4;
         db.beginTransaction();
         try {
-            if (Utilities.isAirplaneModeOn(context)) {
-                Log.i(LOG_TAG, "writing data to db (location) at time " + sdf.format(new Date(time)));
-                db.execSQL("INSERT OR IGNORE INTO " + TABLE
-                        + "(time, accuracy, altitude, satellites, latitude, longitude, speed) " + " VALUES " //
-                        + String.format(Locale.US, //
-                                "(%d, %f, %f, %d, %f, %f, %f)", //
-                                timeSec, accuracy, altitude, satellites, latitude, longitude, speed) //
-                );
-            } else {
-                int cdmaDbm = data.signal.getCdmaDbm();
-                int evdoDbm = data.signal.getEvdoDbm();
-                int evdoSnr = data.signal.getEvdoSnr();
-                int signalStrength = data.signal.getGsmSignalStrength();
+            int cdmaDbm = data.signal.getCdmaDbm();
+            int evdoDbm = data.signal.getEvdoDbm();
+            int evdoSnr = data.signal.getEvdoSnr();
+            int signalStrength = data.signal.getGsmSignalStrength();
 
-                Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(time)));
-                db.execSQL("INSERT OR REPLACE INTO "
-                        + TABLE
-                        + "(time, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm, evdoSnr, signalStrength) "
-                        + " VALUES " //
-                        + String.format(
-                                Locale.US, //
-                                "(%d, %f, %f, %d, %f, %f, %f, %d, %d, %d, %d)", //
-                                timeSec, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm,
-                                evdoSnr, signalStrength) //
-                );
-            }
+            Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(time)));
+            db.execSQL("INSERT OR REPLACE INTO "
+                    + TABLE
+                    + "(time, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm, evdoSnr, signalStrength, carrier) "
+                    + " VALUES " //
+                    + String.format(
+                            Locale.US, //
+                            "(%d, %f, %f, %d, %f, %f, %f, %d, %d, %d, %d, '%s')", //
+                            timeSec, accuracy, altitude, satellites, latitude, longitude, speed, cdmaDbm, evdoDbm,
+                            evdoSnr, signalStrength, carrier) //
+            );
+
             Log.i(LOG_TAG, "transaction successfull");
             db.setTransactionSuccessful();
         } catch (SQLException e) {
