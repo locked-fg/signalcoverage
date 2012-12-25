@@ -2,10 +2,10 @@ package de.locked.cellmapper.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -182,7 +182,8 @@ public class DbHandler {
             File dest = new File(root, fileName);
             dest.getParentFile().mkdirs();
             dest.createNewFile();
-            DataOutputStream dos = new DataOutputStream(new FileOutputStream(dest, false));
+
+            OutputStreamWriter dos = new OutputStreamWriter(new FileOutputStream(dest, false));
 
             // select all data and dump it
             Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE, null);
@@ -191,10 +192,10 @@ public class DbHandler {
                 // write header in the first line
                 if (n == 0) {
                     for (int i = 0; i < cursor.getColumnCount(); i++) {
-                        dos.writeChars(cursor.getColumnName(i));
-                        dos.writeChars(";");
+                        dos.append(cursor.getColumnName(i));
+                        dos.append(";");
                     }
-                    dos.writeChars("\n");
+                    dos.append("\n");
                 }
 
                 // Write values
@@ -202,14 +203,14 @@ public class DbHandler {
                     // make value null save
                     String value = cursor.getString(i);
                     value = value == null ? "" : value; 
-                    dos.writeChars(value);
-                    dos.writeChars(";");
+                    dos.append(value);
+                    dos.append(";");
                 }
-                dos.writeChars("\n");
+                dos.append("\n");
 
                 n++;
                 // logging
-                if (n % 50 == 0) {
+                if (n % 100 == 0) {
                     Log.d(LOG_TAG, "wrote " + n + "lines");
                     listener.propertyChange(new PropertyChangeEvent("dbHandler", "progress", 0, n));
                 }
