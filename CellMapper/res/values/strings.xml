@@ -1,12 +1,12 @@
 <resources>
 
     <string name="app_name">CellMapper</string>
-    <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_upload">Upload</string>
+    <string name="menu_saveSD">Save (SD)</string>
     <string name="title_activity_main">CellMapper</string>
     <string name="title_activity_config">ConfigActivity</string>
-    <string name="useGPS">GPS verwenden</string>
+    <string name="useGPS">use GPS</string>
     <string name="configButton">Config</string>
     
 	<string name="serviceOn">Service On</string>

@@ -5,4 +5,7 @@
     <item android:id="@+id/menu_upload"
         android:title="@string/menu_upload"
         android:orderInCategory="200" />
+    <item android:id="@+id/menu_saveSD"
+        android:title="@string/menu_saveSD"
+        android:orderInCategory="200" />
 </menu>

@@ -1,5 +1,7 @@
 package de.locked.cellmapper;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 import java.util.List;
 
@@ -10,6 +12,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,6 +23,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 import de.locked.cellmapper.model.DbHandler;
@@ -186,8 +190,51 @@ public class CellMapperMain extends Activity {
             case R.id.menu_upload:
                 startActivity(new Intent(this, ChooseAccountActivity.class));
                 return true;
+            case R.id.menu_saveSD:
+                dumpData();
+                return true;
         }
         return false;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void dumpData() {
+        final Context context = this;
+        final ProgressBar mProgress = (ProgressBar) findViewById(R.id.main_progressBar);
+        final Handler mHandler = new Handler();
+
+        new AsyncTask() {
+
+            @Override
+            protected Object doInBackground(Object... params) {
+                DbHandler.dumpTo("CellMapper/data.csv", context, new PropertyChangeListener() {
+
+                    @Override
+                    public void propertyChange(final PropertyChangeEvent event) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mProgress.setProgress((Integer) event.getNewValue());
+                            }
+                        });
+                    }
+                });
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object result) {
+                mProgress.setVisibility(ProgressBar.GONE);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                mProgress.setVisibility(ProgressBar.VISIBLE);
+                mProgress.setMax(DbHandler.getRows(context));
+            }
+
+        }.execute();
     }
 
     private void refresh() {

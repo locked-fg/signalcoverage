@@ -9,16 +9,22 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
-
         <ToggleButton
             android:id="@+id/onOffButton"
-            android:layout_width="wrap_content"
+            android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight=".5"
             android:textOff="@string/serviceOff"
             android:textOn="@string/serviceOn" />
-
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/main_progressBar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="false"
+        android:visibility="gone" />
 
     <EditText
         android:id="@+id/textfield"
@@ -26,13 +32,11 @@
         android:layout_height="fill_parent"
         android:clickable="false"
         android:cursorVisible="false"
-        android:editable="false"
         android:ems="10"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:gravity="top"
-        android:inputType="textMultiLine"
+        android:inputType="none"
         android:textSize="15sp"
         android:typeface="monospace" />
-
 </LinearLayout>

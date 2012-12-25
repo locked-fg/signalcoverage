@@ -1,5 +1,11 @@
 package de.locked.cellmapper.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -9,6 +15,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import android.util.Log;
 
 public class DbHandler {
@@ -157,5 +164,63 @@ public class DbHandler {
         }
         cursor.close();
         return count;
+    }
+
+    public static void dumpTo(String fileName, Context context, PropertyChangeListener listener) {
+        setupDB(context);
+        
+        final int max = getRows(context); 
+
+        try {
+            File root = Environment.getExternalStorageDirectory();
+            if (!root.canWrite()) {
+                Log.e(LOG_TAG, "can't write to root");
+                return;
+            }
+
+            // create destination file
+            File dest = new File(root, fileName);
+            dest.getParentFile().mkdirs();
+            dest.createNewFile();
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(dest, false));
+
+            // select all data and dump it
+            Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE, null);
+            int n = 0;
+            while (cursor.moveToNext()) {
+                // write header in the first line
+                if (n == 0) {
+                    for (int i = 0; i < cursor.getColumnCount(); i++) {
+                        dos.writeChars(cursor.getColumnName(i));
+                        dos.writeChars(";");
+                    }
+                    dos.writeChars("\n");
+                }
+
+                // Write values
+                for (int i = 0; i < cursor.getColumnCount(); i++) {
+                    // make value null save
+                    String value = cursor.getString(i);
+                    value = value == null ? "" : value; 
+                    dos.writeChars(value);
+                    dos.writeChars(";");
+                }
+                dos.writeChars("\n");
+
+                n++;
+                // logging
+                if (n % 50 == 0) {
+                    Log.d(LOG_TAG, "wrote " + n + "lines");
+                    listener.propertyChange(new PropertyChangeEvent("dbHandler", "progress", 0, n));
+                }
+            }
+            Log.i(LOG_TAG, "wrote " + n + "lines");
+            listener.propertyChange(new PropertyChangeEvent("dbHandler", "progress", 0, n));
+
+            cursor.close();
+            dos.close();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "io exception", e);
+        }
     }
 }
