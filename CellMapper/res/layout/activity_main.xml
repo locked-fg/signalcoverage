@@ -24,7 +24,10 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:indeterminate="false"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:minHeight="10dip"
+    	android:maxHeight="10dip"
+         />
 
     <EditText
         android:id="@+id/textfield"
