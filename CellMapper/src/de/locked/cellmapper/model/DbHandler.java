@@ -252,7 +252,11 @@ public class DbHandler {
         private final KmlOutputStream os;
         // http://www.ig.utexas.edu/outreach/googleearth/latlong.html
         private final double mToDegree = 0.00001;
-        private final float heightMultiplyer = 2;
+        private final float heightMultiplyer = 20;
+        // values > this value will be replaced by the default
+        private final int signalStrengthMaximum = 90;
+        // replace signalstrength > threshold by this value
+        private final int defaultSignalStrength = 0;
 
         public KmlFile(String fileName) throws IOException {
             File root = Environment.getExternalStorageDirectory();
@@ -279,6 +283,7 @@ public class DbHandler {
                 return;
             double halfAcc = (accuracy / 2d) * mToDegree;
 
+            signalStrength = signalStrength > signalStrengthMaximum ? defaultSignalStrength : signalStrength;
             signalStrength *= heightMultiplyer;
 
             double leftLon = longitude - halfAcc;
