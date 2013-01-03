@@ -207,7 +207,7 @@ public class CellMapperMain extends Activity {
 
             @Override
             protected Object doInBackground(Object... params) {
-                DbHandler.dumpTo("CellMapper/data.csv", context, new PropertyChangeListener() {
+                DbHandler.dumpTo("data", context, new PropertyChangeListener() {
 
                     @Override
                     public void propertyChange(final PropertyChangeEvent event) {
