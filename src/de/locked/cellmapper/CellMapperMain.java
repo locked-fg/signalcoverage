@@ -187,9 +187,9 @@ public class CellMapperMain extends Activity {
             case R.id.menu_settings:
                 startActivity(new Intent(this, ConfigActivity.class));
                 return true;
-            case R.id.menu_upload:
-                startActivity(new Intent(this, ChooseAccountActivity.class));
-                return true;
+//            case R.id.menu_upload:
+//                startActivity(new Intent(this, ChooseAccountActivity.class));
+//                return true;
             case R.id.menu_saveSD:
                 dumpData();
                 return true;
