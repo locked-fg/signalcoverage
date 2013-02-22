@@ -1,14 +1,20 @@
 package de.locked.cellmapper;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
@@ -27,6 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 import de.locked.cellmapper.model.DbHandler;
+import de.locked.cellmapper.model.Filesaver;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
@@ -187,38 +194,57 @@ public class CellMapperMain extends Activity {
             case R.id.menu_settings:
                 startActivity(new Intent(this, ConfigActivity.class));
                 return true;
-//            case R.id.menu_upload:
-//                startActivity(new Intent(this, ChooseAccountActivity.class));
-//                return true;
+            case R.id.menu_upload:
+                upload();
+                return true;
             case R.id.menu_saveSD:
-                dumpData();
+                dumpDataToFile();
                 return true;
         }
         return false;
     }
 
+    private void upload() {
+        try {
+            
+            Cursor cursor = DbHandler.getAll(this);
+            String[] names = cursor.getColumnNames();
+            while (cursor.moveToNext()){
+                JSONObject data = new JSONObject();
+                for (String name : names) {
+                    data.put(name, cursor.getString(cursor.getColumnIndex(name)));
+                }
+                Log.i(LOG_TAG, data.toString());
+
+                HttpPut httpPut = new HttpPut("http://192.168.178.32:8084/cellmapper/rest/data");
+                httpPut.setEntity(new StringEntity(data.toString()));
+
+                HttpResponse response = new DefaultHttpClient().execute(httpPut);
+                Log.i(LOG_TAG, EntityUtils.toString(response.getEntity()));
+
+                // das hier raus
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "error", e);
+        }
+    }
+    
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void dumpData() {
+    private void dumpDataToFile() {
         final Context context = this;
         final ProgressBar mProgress = (ProgressBar) findViewById(R.id.main_progressBar);
-        final Handler mHandler = new Handler();
 
         new AsyncTask() {
 
             @Override
             protected Object doInBackground(Object... params) {
-                DbHandler.dumpTo("data", context, new PropertyChangeListener() {
+                Filesaver saver = new Filesaver();
+                saver.addPropertyChangeListener(new ProgressUpdater(mProgress));
 
-                    @Override
-                    public void propertyChange(final PropertyChangeEvent event) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mProgress.setProgress((Integer) event.getNewValue());
-                            }
-                        });
-                    }
-                });
+                Cursor cursor = DbHandler.getAll(context);
+                saver.saver("CellMapper/data", cursor);
+                cursor.close();
 
                 return null;
             }
@@ -258,3 +284,4 @@ public class CellMapperMain extends Activity {
         });
     }
 }
+

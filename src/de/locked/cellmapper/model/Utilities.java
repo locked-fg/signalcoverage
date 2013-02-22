@@ -1,6 +1,5 @@
 package de.locked.cellmapper.model;
 
-import android.app.Activity;
 import android.content.Context;
 import android.provider.Settings;
 
@@ -21,11 +20,6 @@ public class Utilities {
             s += str;
         }
         return s;
-    }
-
-    @Deprecated
-    public static void setKeepScreenOn(Activity activity, boolean keepScreenOn) {
-        activity.getCurrentFocus().setKeepScreenOn(keepScreenOn);
     }
 
 }
