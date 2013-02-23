@@ -1,14 +1,19 @@
 package de.locked.cellmapper;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -18,12 +23,12 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,8 +37,13 @@ import android.view.View.OnClickListener;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+
+import com.google.gson.Gson;
+
 import de.locked.cellmapper.model.DbHandler;
-import de.locked.cellmapper.model.Filesaver;
+import de.locked.cellmapper.share.Data;
+import de.locked.cellmapper.share.Signer;
+import de.locked.cellmapper.share.User;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
@@ -206,61 +216,72 @@ public class CellMapperMain extends Activity {
 
     private void upload() {
         try {
-            
+            // get a userId
+            HttpGet get = new HttpGet("http://192.168.178.32:8084/cellmapper/rest/user/signUp/");
+            HttpResponse httpResponse = new DefaultHttpClient().execute(get);
+            String dataString = EntityUtils.toString(httpResponse.getEntity());
+            Log.i(LOG_TAG, "received: " + dataString);
+            User user = new Gson().fromJson(dataString, User.class);
+
+            // create the secret hash
+            int userId = user.userId;
+            String unencrypted = user.secret;
+            String encrypted = Base64.encodeToString(User.makePass(userId, unencrypted), Base64.DEFAULT);
+
+            // build the data list
+            Collection<Data> dataList = new ArrayList<Data>();
             Cursor cursor = DbHandler.getAll(this);
-            String[] names = cursor.getColumnNames();
-            while (cursor.moveToNext()){
-                JSONObject data = new JSONObject();
-                for (String name : names) {
-                    data.put(name, cursor.getString(cursor.getColumnIndex(name)));
-                }
-                Log.i(LOG_TAG, data.toString());
+            while (cursor.moveToNext()) {
+                Data data = new Data();
+                data.userId = userId;
+                data.time = cursor.getInt(cursor.getColumnIndex("time"));
+                data.accuracy = cursor.getDouble(cursor.getColumnIndex("accuracy"));
+                data.altitude = cursor.getFloat(cursor.getColumnIndex("altitude"));
+                data.satellites = cursor.getInt(cursor.getColumnIndex("satellites"));
+                data.latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
+                data.longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
+                data.speed = cursor.getDouble(cursor.getColumnIndex("speed"));
+                data.cdmaDbm = cursor.getInt(cursor.getColumnIndex("cdmaDbm"));
+                data.evdoDbm = cursor.getInt(cursor.getColumnIndex("evdoDbm"));
+                data.evdoSnr = cursor.getInt(cursor.getColumnIndex("evdoSnr"));
+                data.signalStrength = cursor.getInt(cursor.getColumnIndex("signalStrength"));
+                data.carrier = cursor.getString(cursor.getColumnIndex("carrier"));
 
-                HttpPut httpPut = new HttpPut("http://192.168.178.32:8084/cellmapper/rest/data");
-                httpPut.setEntity(new StringEntity(data.toString()));
-
-                HttpResponse response = new DefaultHttpClient().execute(httpPut);
-                Log.i(LOG_TAG, EntityUtils.toString(response.getEntity()));
-
-                // das hier raus
-                cursor.close();
+                dataList.add(data);
             }
+            cursor.close();
+
+            // encode list to JSON
+            String jsonPayload = new Gson().toJson(Collections.unmodifiableCollection(dataList));
+            
+            int timestamp = (int) (Calendar.getInstance().getTimeInMillis() / 1000);
+            String signature = new Signer().createSignature(userId, encrypted, timestamp, jsonPayload);
+            
+            String log = "computing sig: " + userId + " / " + encrypted + " / " + timestamp + " / " + jsonPayload;
+            Log.i(LOG_TAG, log);
+            Log.i(LOG_TAG, "signature " + signature);
+
+            // /{login}/{timestamp}/{signature}
+            String url = String.format(Locale.US, "http://192.168.178.32:8084/cellmapper/rest/data/%s/%d/%s/", userId,
+                    timestamp, signature);
+            StringEntity entityPayload = new StringEntity(jsonPayload);
+
+            Log.i(LOG_TAG, "URL: " + url+"\npayload: " + entityPayload);
+
+            HttpPut httpPut = new HttpPut(url);
+            httpPut.setEntity(entityPayload);
+            HttpResponse response = new DefaultHttpClient().execute(httpPut);
+            Log.i(LOG_TAG, "Response: " + response.getStatusLine().toString());
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "error", e);
         }
     }
-    
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+
+    @SuppressWarnings({ "unchecked" })
     private void dumpDataToFile() {
-        final Context context = this;
-        final ProgressBar mProgress = (ProgressBar) findViewById(R.id.main_progressBar);
-
-        new AsyncTask() {
-
-            @Override
-            protected Object doInBackground(Object... params) {
-                Filesaver saver = new Filesaver();
-                saver.addPropertyChangeListener(new ProgressUpdater(mProgress));
-
-                Cursor cursor = DbHandler.getAll(context);
-                saver.saver("CellMapper/data", cursor);
-                cursor.close();
-
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Object result) {
-                mProgress.setVisibility(ProgressBar.GONE);
-            }
-
-            @Override
-            protected void onPreExecute() {
-                mProgress.setVisibility(ProgressBar.VISIBLE);
-                mProgress.setMax(DbHandler.getRows(context));
-            }
-
-        }.execute();
+        ProgressBar mProgress = (ProgressBar) findViewById(R.id.main_progressBar);
+        new FileExporter(mProgress, this).execute();
     }
 
     private void refresh() {
@@ -284,4 +305,3 @@ public class CellMapperMain extends Activity {
         });
     }
 }
-
