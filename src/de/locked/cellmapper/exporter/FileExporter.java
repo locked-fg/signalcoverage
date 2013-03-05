@@ -19,24 +19,20 @@ public class FileExporter implements DataExporter {
     private static final String LOG_TAG = FileExporter.class.getName();
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private final String fileName;
+    private final Cursor cursor;
 
-    public FileExporter(String fileName) {
+    public FileExporter(String fileName, Cursor cursor) {
         this.fileName = fileName;
+        this.cursor = cursor;
     }
 
-    /**
-     * @see de.locked.cellmapper.model.DataExporter#addPropertyChangeListener(java.beans.PropertyChangeListener)
-     */
     @Override
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
     }
 
-    /**
-     * @see de.locked.cellmapper.model.DataExporter#process(android.database.Cursor)
-     */
     @Override
-    public void process(Cursor cursor) {
+    public void process() {
         try {
             File root = Environment.getExternalStorageDirectory();
             if (!root.canWrite()) {
@@ -82,6 +78,7 @@ public class FileExporter implements DataExporter {
 
             csv.close();
             kml.close();
+            cursor.close();
         } catch (IOException e) {
             Log.e(LOG_TAG, "io exception", e);
         }

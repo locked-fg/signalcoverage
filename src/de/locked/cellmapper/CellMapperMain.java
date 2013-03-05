@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
@@ -20,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 import de.locked.cellmapper.exporter.AsyncFileExporterTask;
@@ -197,11 +199,17 @@ public class CellMapperMain extends Activity {
     }
 
     private void upload() {
-        new AsyncFileExporterTask(R.id.main_progressBar, this, new UrlExporter()).execute();
+        Cursor cursor = DbHandler.getAll(this);
+        ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
+        int max = DbHandler.getRows(this);
+        new AsyncFileExporterTask(bar, max, new UrlExporter(cursor)).execute();
     }
 
     private void dumpDataToFile() {
-        new AsyncFileExporterTask(R.id.main_progressBar, this, new FileExporter("CellMapper/data")).execute();
+        Cursor cursor = DbHandler.getAll(this);
+        ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
+        int max = DbHandler.getRows(this);
+        new AsyncFileExporterTask(bar, max, new FileExporter("CellMapper/data", cursor)).execute();
     }
 
     private void refresh() {

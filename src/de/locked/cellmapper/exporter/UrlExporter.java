@@ -20,7 +20,11 @@ public class UrlExporter implements DataExporter {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private final int chunksize = 100;
     private final Rest rest = new Rest();
-    private User user;
+    private final Cursor cursor;
+
+    public UrlExporter(Cursor cursor) {
+        this.cursor = cursor;
+    }
 
     @Override
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -29,9 +33,9 @@ public class UrlExporter implements DataExporter {
     }
 
     @Override
-    public void process(Cursor cursor) {
+    public void process() {
         try {
-            user = getUser();
+            User user = getUser();
 
             // build the data list
             Collection<Data> dataList = new ArrayList<Data>(chunksize);
@@ -54,14 +58,16 @@ public class UrlExporter implements DataExporter {
                 dataList.add(data);
 
                 if (dataList.size() == chunksize) {
-                    upload(new ArrayList<Data>(dataList));
+                    upload(user, new ArrayList<Data>(dataList));
                     dataList.clear();
                 }
             }
+            cursor.close();
             if (!dataList.isEmpty()) {
-                upload(new ArrayList<Data>(dataList));
+                upload(user, new ArrayList<Data>(dataList));
                 dataList.clear();
             }
+            
         } catch (ClientProtocolException e) {
             Log.e(LOG_TAG, "protocol error", e);
         } catch (IOException e) {
@@ -69,7 +75,7 @@ public class UrlExporter implements DataExporter {
         }
     }
 
-    private void upload(Collection<Data> dataList) throws UnsupportedEncodingException, ClientProtocolException,
+    private void upload(User user, Collection<Data> dataList) throws UnsupportedEncodingException, ClientProtocolException,
             IOException {
         rest.putData(user, dataList);
     }
