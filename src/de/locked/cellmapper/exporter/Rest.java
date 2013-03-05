@@ -56,7 +56,7 @@ public class Rest {
      * @throws IOException
      * @throws ClientProtocolException
      */
-    public final void putData(int userId, int timestamp, String jsonPayload, String signature)
+    private final void putData(int userId, int timestamp, String jsonPayload, String signature)
             throws UnsupportedEncodingException, IOException, ClientProtocolException {
         String url = String.format(Locale.US, server + uploadPattern, //
                 userId, timestamp, signature);
