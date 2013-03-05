@@ -9,6 +9,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.Settings;
 import android.util.Log;
 
 public class DbHandler {
@@ -70,8 +71,8 @@ public class DbHandler {
             return;
         }
 
-        // can there be anything in airplane mode?
-        if (Utilities.isAirplaneModeOn(context)) {
+        // don't save in airplane mode - it's clear that we won't have signal there
+        if (Settings.System.getInt(context.getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 0) != 0) {
             return;
         }
 
@@ -138,7 +139,7 @@ public class DbHandler {
                 String columnName = cursor.getColumnName(i);
                 String value = cursor.getString(i);
 
-                sb.append(Utilities.rpad(columnName + ":", 16, " "));
+                sb.append(Strings.rpad(columnName + ":", 16, " "));
                 sb.append(value);
                 sb.append("\n");
             }
