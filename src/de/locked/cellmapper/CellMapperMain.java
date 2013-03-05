@@ -278,7 +278,6 @@ public class CellMapperMain extends Activity {
         }
     }
 
-    @SuppressWarnings({ "unchecked" })
     private void dumpDataToFile() {
         ProgressBar mProgress = (ProgressBar) findViewById(R.id.main_progressBar);
         new FileExporter(mProgress, this).execute();
