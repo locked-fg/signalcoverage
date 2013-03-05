@@ -7,6 +7,11 @@ import android.widget.ProgressBar;
 import de.locked.cellmapper.model.DbHandler;
 import de.locked.cellmapper.model.Filesaver;
 
+/**
+ * Async task that queries the database and saves the result using the Filesaver while updating the given progress bar
+ * 
+ * @see Filesaver
+ */
 public class FileExporter extends AsyncTask<Void, Void, Void> {
     private final ProgressBar mProgress;
     private final Context context;

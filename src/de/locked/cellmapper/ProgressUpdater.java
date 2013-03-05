@@ -7,15 +7,21 @@ import android.os.Handler;
 import android.widget.ProgressBar;
 
 /**
- * class to update a progressbar from a property change listener
+ * class to update a progressbar from a property change listener.
  * 
  * @author Franz
  */
 public class ProgressUpdater implements PropertyChangeListener {
 
     private final Handler mHandler = new Handler();
+    // may be null!
     private final ProgressBar mProgress;
 
+    /**
+     * Null safe constructor
+     * 
+     * @param mProgress
+     */
     public ProgressUpdater(ProgressBar mProgress) {
         this.mProgress = mProgress;
     }
@@ -26,7 +32,9 @@ public class ProgressUpdater implements PropertyChangeListener {
 
             @Override
             public void run() {
-                mProgress.setProgress((Integer) event.getNewValue());
+                if (mProgress != null) {
+                    mProgress.setProgress((Integer) event.getNewValue());
+                }
             }
         });
     }
