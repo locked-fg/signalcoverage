@@ -68,7 +68,7 @@ public class Rest {
         Log.i(LOG_TAG, "Response: " + response.getStatusLine().toString());
     }
 
-    public void putData(User user, Collection<Data> dataList) throws UnsupportedEncodingException,
+    public final void putData(User user, Collection<Data> dataList) throws UnsupportedEncodingException,
             ClientProtocolException, IOException {
         // set userId to the data elements
         for (Data data : dataList) {
