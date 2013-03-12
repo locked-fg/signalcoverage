@@ -9,6 +9,8 @@ import java.util.Collection;
 
 import org.apache.http.client.ClientProtocolException;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.util.Base64;
 import android.util.Log;
@@ -21,9 +23,11 @@ public class UrlExporter implements DataExporter {
     private final int chunksize = 100;
     private final Rest rest = new Rest();
     private final Cursor cursor;
+    private final SharedPreferences preferences;
 
-    public UrlExporter(Cursor cursor) {
+    public UrlExporter(Cursor cursor, SharedPreferences preferences) {
         this.cursor = cursor;
+        this.preferences = preferences;
     }
 
     @Override
@@ -36,6 +40,9 @@ public class UrlExporter implements DataExporter {
     public void process() {
         try {
             User user = getUser();
+            if (user == null){
+                return;
+            }
 
             // build the data list
             Collection<Data> dataList = new ArrayList<Data>(chunksize);
@@ -67,7 +74,7 @@ public class UrlExporter implements DataExporter {
                 upload(user, new ArrayList<Data>(dataList));
                 dataList.clear();
             }
-            
+
         } catch (ClientProtocolException e) {
             Log.e(LOG_TAG, "protocol error", e);
         } catch (IOException e) {
@@ -75,18 +82,53 @@ public class UrlExporter implements DataExporter {
         }
     }
 
-    private void upload(User user, Collection<Data> dataList) throws UnsupportedEncodingException, ClientProtocolException,
-            IOException {
+    private User getUser() throws ClientProtocolException, IOException {
+        User user = getUserFromPreference();
+
+        // we don't have a user right now, auto acquire?
+        if (user == null) {
+            String url = preferences.getString("uploadUrl", null);
+            boolean acquireLogin = preferences.getBoolean("acquireLogin", false);
+            if (url != null && acquireLogin) {
+                User plainPassUser = rest.signUp();
+                user = encrypt(plainPassUser);
+
+                // if succeeded, save credentials
+                if (user != null) {
+                    Editor editor = preferences.edit();
+                    editor.putInt("login", plainPassUser.userId);
+                    editor.putString("password", plainPassUser.secret);
+                    editor.commit();
+                }
+            }
+        }
+
+        return user;
+    }
+
+    private User getUserFromPreference() {
+        int login = preferences.getInt("login", -1);
+        String pass = preferences.getString("password", null);
+
+        if (login > 0 && pass != null) {
+            User user = new User(login, pass);
+            return encrypt(user);
+        }
+
+        return null;
+    }
+
+    private void upload(User user, Collection<Data> dataList) throws UnsupportedEncodingException,
+            ClientProtocolException, IOException {
         rest.putData(user, dataList);
     }
 
-    private User getUser() throws ClientProtocolException, IOException {
-        // acquire a userId from remote
-        User user = rest.signUp();
-
-        // create the secret hash
+    // create the secret hash
+    private User encrypt(User user) {
+        if (user == null) {
+            return null;
+        }
         String encrypted = Base64.encodeToString(User.makePass(user.userId, user.secret), Base64.DEFAULT);
-        user = new User(user.userId, encrypted);
-        return user;
+        return new User(user.userId, encrypted);
     }
 }

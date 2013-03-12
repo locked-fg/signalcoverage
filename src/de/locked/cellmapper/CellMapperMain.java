@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -24,7 +25,7 @@ import android.view.View.OnClickListener;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-import de.locked.cellmapper.exporter.AsyncFileExporterTask;
+import de.locked.cellmapper.exporter.AsyncExporterTask;
 import de.locked.cellmapper.exporter.FileExporter;
 import de.locked.cellmapper.exporter.UrlExporter;
 import de.locked.cellmapper.model.DbHandler;
@@ -202,14 +203,15 @@ public class CellMapperMain extends Activity {
         Cursor cursor = DbHandler.getAll(this);
         ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
         int max = DbHandler.getRows(this);
-        new AsyncFileExporterTask(bar, max, new UrlExporter(cursor)).execute();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        new AsyncExporterTask(bar, max, new UrlExporter(cursor, preferences)).execute();
     }
 
     private void dumpDataToFile() {
         Cursor cursor = DbHandler.getAll(this);
         ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
         int max = DbHandler.getRows(this);
-        new AsyncFileExporterTask(bar, max, new FileExporter("CellMapper/data", cursor)).execute();
+        new AsyncExporterTask(bar, max, new FileExporter("CellMapper/data", cursor)).execute();
     }
 
     private void refresh() {

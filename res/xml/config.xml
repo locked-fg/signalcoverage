@@ -44,7 +44,7 @@
     </PreferenceScreen>
     <PreferenceScreen android:title="Account" >
         <EditTextPreference
-            android:key="url"
+            android:key="uploadUrl"
             android:singleLine="true"
             android:summary="The URL to which the data is uploaded"
             android:title="Upload URL" />
@@ -59,7 +59,12 @@
             android:singleLine="true"
             android:summary="The password for the upload service"
             android:title="Password" />
-        <CheckBoxPreference android:title="Auto acquire login" android:summary="Server supports automatically aquiring a login" android:key="acquireLogin" android:enabled="true"/>
+
+        <CheckBoxPreference
+            android:enabled="true"
+            android:key="acquireLogin"
+            android:summary="Server supports automatically aquiring a login"
+            android:title="Auto acquire login" />
     </PreferenceScreen>
 
 </PreferenceScreen>
