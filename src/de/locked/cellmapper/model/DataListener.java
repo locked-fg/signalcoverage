@@ -16,8 +16,6 @@ import android.util.Log;
 
 public class DataListener extends PhoneStateListener implements LocationListener {
     public static final String LOG_TAG = DataListener.class.getName();
-    public static final String DB_NAME = "CellMapper";
-    public static final String TABLE = "Base";
 
     private final Context context;
     private final LocationManager locationManager;
@@ -26,24 +24,27 @@ public class DataListener extends PhoneStateListener implements LocationListener
 
     public DataListener(Context context) {
         this.context = context;
-        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.i(LOG_TAG, "loction update received");
-
-        GpsStatus gpsStatus = locationManager.getGpsStatus(null);
-        int satellites = countSatellites(gpsStatus);
+        if (location == null) {
+            Log.i(LOG_TAG, "null location received, ignoring");
+            return;
+        }
+        Log.i(LOG_TAG, "location update received");
 
         TelephonyManager telephonyManager = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
         String carrier = telephonyManager.getNetworkOperatorName();
-        
-        Data data = new Data(location, signal, gpsStatus, satellites, carrier);
+
+        int satellites = countSatellites();
+        Data data = new Data(location, signal, satellites, carrier);
         DbHandler.save(data, context);
     }
 
-    private int countSatellites(GpsStatus gpsStatus) {
+    private int countSatellites() {
+        GpsStatus gpsStatus = locationManager.getGpsStatus(null);
         int i = 0;
 
         if (gpsStatus != null) {

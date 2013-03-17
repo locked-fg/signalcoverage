@@ -1,7 +1,9 @@
 package de.locked.cellmapper;
 
+import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -13,16 +15,15 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import de.locked.cellmapper.model.DataListener;
+import de.locked.cellmapper.model.DbHandler;
 import de.locked.cellmapper.model.Preferences;
 
 public class DbLoggerService extends Service {
     private static final String LOG_TAG = DbLoggerService.class.getName();
 
-    // parameter passed to location listener to get an update every this many
-    // meters
+    // get an update every this many meters
     private float minLocationDistance = 50; // m
-    // parameter passed to location listener to get an update every this many
-    // milliseconds
+    // get an update every this many milliseconds
     private long minLocationTime = 5000; // ms
 
     // keep the location lister that long active before unregistering again
@@ -38,8 +39,13 @@ public class DbLoggerService extends Service {
     private DataListener dataListener;
     private Thread runner;
 
+    private boolean informedUserAboutDisabledGPS = false;
+
     class PreferenceLoader implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+        /**
+         * restart the process ehenever the preferences have changed
+         */
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             Log.i(LOG_TAG, "preferences changed - restarting");
@@ -78,11 +84,13 @@ public class DbLoggerService extends Service {
         loader.onSharedPreferenceChanged(null, null);
     }
 
+    /**
+     * We want this service to continue running until it is explicitly stopped,
+     * so return sticky.
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i("LocalService", "Received start id " + startId + ": " + intent);
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
         return START_STICKY;
     }
 
@@ -127,40 +135,23 @@ public class DbLoggerService extends Service {
                     while (!isInterrupted()) {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
-                        
 
-                        // get a location every minLocationTime milliseconds
-                        final long end = System.currentTimeMillis() + updateDuration;
-                        Location last = getLocation();
-                        if (last != null){
-                            dataListener.onLocationChanged(last);
-                        }
-                        
-                        while (!isInterrupted() && System.currentTimeMillis() < end) {
-                            Location currentLocation = getLocation();
+                        // get initial location
+                        dataListener.onLocationChanged(getLocation());
 
-                            // location after null -> always save
-                            if (last == null && currentLocation != null) {
-                                dataListener.onLocationChanged(currentLocation);
-                            }
-                            // location after location -> save if distance is large enough
-                            if (last != null && currentLocation != null
-                                    && last.distanceTo(currentLocation) >= minLocationDistance) {
-                                dataListener.onLocationChanged(currentLocation);
-                            }
-
-                            last = currentLocation;
-                            sleep(minLocationTime);
-                        }
+                        // now wait for location updates
+                        Log.d(LOG_TAG, "wait "+updateDuration+"ms for updates");
+                        sleep(updateDuration);
 
                         // set asleep and wait for the next iteration
-                        Log.i(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
+                        Log.d(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
                         removeListener();
                         sleep(sleepBetweenMeasures);
                     }
                     Looper.loop();
                 } catch (InterruptedException e) {
                     Log.i(LOG_TAG, "location thread interrupted");
+                    removeListener();
                 }
             }
         };
@@ -168,19 +159,37 @@ public class DbLoggerService extends Service {
     }
 
     private Location getLocation() {
-        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if (useGPS) {
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location locationNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        Location locationGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+        // too old locations are rejected later in the DbHandler
+        final long limit = System.currentTimeMillis() - DbHandler.ALLOWED_TIME_DRIFT;
+        if (locationNetwork != null && locationNetwork.getTime() < limit) {
+            locationNetwork = null;
         }
-        
-        // only use locations that are younger than 10s
-        if (location != null && Math.abs(location.getTime() - System.currentTimeMillis()) > 10000 ){
-            location = null;
+        if (locationGps != null && locationGps.getTime() < limit) {
+            locationGps = null;
         }
-        return location;
+
+        // both can be null
+        if (locationGps == null && locationNetwork == null) {
+            return null;
+        }
+
+        // ONE is not null now
+        float accNetwork = locationNetwork == null ? Float.MAX_VALUE : locationNetwork.getAccuracy();
+        float accGps = locationGps == null ? Float.MAX_VALUE : locationGps.getAccuracy();
+
+        return accNetwork < accGps ? locationNetwork : locationGps;
     }
 
+    /**
+     * Listen updates on location and signal provider
+     */
     private void addListener() {
+        // just to be sure ...
+        removeListener();
+
         Log.i(LOG_TAG, "add listeners");
 
         // initPhoneState listener
@@ -189,8 +198,8 @@ public class DbLoggerService extends Service {
                 | PhoneStateListener.LISTEN_SERVICE_STATE);
 
         // init location listeners
-        boolean useGPS = preferences.getBoolean(Preferences.use_gps, true);
-        if (useGPS) {
+        boolean gpsEnabled = getGpsEnabled();
+        if (gpsEnabled) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
                     dataListener);
         }
@@ -198,9 +207,48 @@ public class DbLoggerService extends Service {
                 dataListener);
     }
 
+    /**
+     * check if GPS is enabled. The user might have disabled it but want's to
+     * use it - in this case: tell it to him
+     * 
+     * @return true if GPS is available
+     */
+    private boolean getGpsEnabled() {
+        boolean useGPS = preferences.getBoolean(Preferences.use_gps, true);
+        boolean gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (useGPS && !gpsEnabled && !informedUserAboutDisabledGPS) {
+            showGPSDisabledAlertToUser();
+            informedUserAboutDisabledGPS = true;
+        }
+        return gpsEnabled && useGPS;
+    }
+
+    /**
+     * show a pop up that tells the user that he wants GPS but it's disabled in
+     * the phone. - I want lambdas :-(
+     */
+    private void showGPSDisabledAlertToUser() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage("GPS is disabled in your device. Would you like to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Goto Settings Page To Enable GPS", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        Intent callGPSSettingIntent = new Intent(
+                                android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(callGPSSettingIntent);
+                    }
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        alertDialogBuilder.create().show();
+    }
+
     private void removeListener() {
         Log.i(LOG_TAG, "remove listeners");
-
         // unregister location
         locationManager.removeUpdates(dataListener);
         // unregister telephone
