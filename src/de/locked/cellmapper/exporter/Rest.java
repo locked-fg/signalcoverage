@@ -29,17 +29,22 @@ import de.locked.cellmapper.share.User;
 public class Rest {
     private static final String LOG_TAG = Rest.class.getName();
 
-    private final String server;// =
-                                // "http://192.168.178.32:8084/cellmapper/rest/";
-    private final String signupUrl = "user/signUp/";
+    private final String server; // "http://192.168.178.32:8084/cellmapper/rest";
+    private final String signupUrl = "/1/user/signUp/";
     // userId, timestamp, signature
-    private final String uploadPattern = "data/%s/%d/%s/";
+    private final String uploadPattern = "/1/data/%s/%d/%s/";
 
-    public Rest(String url) {
-        url = sanitizeUploadURL(url);
-        this.server = url;
+    public Rest(String serverUrl) {
+        serverUrl = sanitizeUploadURL(serverUrl);
+        this.server = serverUrl;
     }
 
+    /**
+     * add http before and remove a trailing slash
+     * 
+     * @param url
+     * @return
+     */
     private String sanitizeUploadURL(String url) {
         Log.d(LOG_TAG, "sanitizing url: " + url);
         if (url == null) {
@@ -48,8 +53,8 @@ public class Rest {
 
         url = url.trim();
         if (url.length() != 0) {
-            if (!url.endsWith("/")) {
-                url = url + "/";
+            if (url.endsWith("/")) {
+                url = url.substring(0, url.length()-1);
             }
             if (!url.startsWith("http")) {
                 url = "http://" + url;
@@ -60,8 +65,10 @@ public class Rest {
     }
 
     public final User signUp() throws ClientProtocolException, IOException {
-        Log.d(LOG_TAG, "request signup from " + server + signupUrl);
-        HttpGet get = new HttpGet(server + signupUrl);
+        String url = server + signupUrl;
+
+        Log.d(LOG_TAG, "request signup from " + url);
+        HttpGet get = new HttpGet(url);
         HttpResponse httpResponse = new DefaultHttpClient().execute(get);
         String dataString = EntityUtils.toString(httpResponse.getEntity());
         Log.i(LOG_TAG, "received: " + dataString);
