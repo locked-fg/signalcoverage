@@ -19,10 +19,10 @@ import de.locked.cellmapper.share.User;
 public class UrlExporter implements DataExporter {
     private static final String LOG_TAG = UrlExporter.class.getName();
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-    private final int chunksize = 100;
-    private final Rest rest; // = new Rest(); add REST URL
+    private final Rest rest;
     private final Cursor cursor;
     private final SharedPreferences preferences;
+    private final int chunksize = 1000;
 
     public UrlExporter(Cursor cursor, SharedPreferences preferences) {
         this.cursor = cursor;
@@ -117,7 +117,7 @@ public class UrlExporter implements DataExporter {
                     Log.i(LOG_TAG, "got a user name!");
 
                     Editor editor = preferences.edit();
-                    editor.putInt("login", plainPassUser.userId);
+                    editor.putString("login", Integer.toString(plainPassUser.userId));
                     editor.putString("password", plainPassUser.secret);
                     editor.commit();
                 } else {
@@ -130,8 +130,13 @@ public class UrlExporter implements DataExporter {
     }
 
     private User getUserFromPreference() {
-        int login = preferences.getInt("login", -1);
+        String loginString = preferences.getString("login", "");
         String pass = preferences.getString("password", null);
+
+        int login = 0;
+        if (loginString.trim().length() > 0){
+            login = Integer.parseInt(loginString);
+        }
 
         if (login > 0 && pass != null) {
             User user = new User(login, pass);

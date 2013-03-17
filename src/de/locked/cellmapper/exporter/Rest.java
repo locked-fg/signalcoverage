@@ -86,7 +86,7 @@ public class Rest {
             throws UnsupportedEncodingException, IOException, ClientProtocolException {
         String url = String.format(Locale.US, server + uploadPattern, //
                 userId, timestamp, signature);
-        Log.i(LOG_TAG, "URL: " + url + "\npayload: " + jsonPayload);
+        Log.i(LOG_TAG, "URL: " + url + " \npayload size: " + jsonPayload.length() + " chars \npayload: " + jsonPayload);
 
         HttpPut httpPut = new HttpPut(url);
         httpPut.setEntity(new StringEntity(jsonPayload));
@@ -106,7 +106,7 @@ public class Rest {
         String jsonPayload = new Gson().toJson(Collections.unmodifiableCollection(dataList));
         String signature = new Signer().createSignature(user.userId, user.secret, timestamp, jsonPayload);
 
-        Log.i(LOG_TAG, String.format("%d / %s / %d / %s => %s", //
+        Log.d(LOG_TAG, String.format("%d / %s / %d / %s => %s", //
                 user.userId, user.secret, timestamp, jsonPayload, signature));
 
         // /{login}/{timestamp}/{signature}

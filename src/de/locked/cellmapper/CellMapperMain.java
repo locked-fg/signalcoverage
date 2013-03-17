@@ -204,7 +204,7 @@ public class CellMapperMain extends Activity {
         Cursor cursor = DbHandler.getAll(this);
         ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
         int max = DbHandler.getRows(this);
-        Log.i(LOG_TAG, "upload max " + max + " rows");
+        Log.i(LOG_TAG, "upload " + max + " rows");
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (null == preferences.getString("uploadUrl", null)) {
