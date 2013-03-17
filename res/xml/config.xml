@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orderingFromXml="true"
+    >
 
     <PreferenceScreen
         android:orderingFromXml="true"
-        android:title="Positioning" >
+        android:title="Positioning"
+        >
         <CheckBoxPreference
             android:enabled="true"
             android:key="use_gps"
@@ -59,12 +62,6 @@
             android:singleLine="true"
             android:summary="The password for the upload service"
             android:title="Password" />
-
-        <CheckBoxPreference
-            android:enabled="true"
-            android:key="acquireLogin"
-            android:summary="Server supports automatically aquiring a login"
-            android:title="Auto acquire login" />
     </PreferenceScreen>
 
 </PreferenceScreen>

@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 import de.locked.cellmapper.exporter.AsyncExporterTask;
 import de.locked.cellmapper.exporter.FileExporter;
@@ -32,7 +33,7 @@ import de.locked.cellmapper.model.DbHandler;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
-    private static final int UI_REFRESH_INTERVAL = 2000;
+    private static final int UI_REFRESH_INTERVAL = 1000;
 
     private Thread refresher;
     private Handler handler;
@@ -160,7 +161,6 @@ public class CellMapperMain extends Activity {
     }
 
     private boolean isServiceRunning(String serviceName) {
-        Log.i(LOG_TAG, "check if service is running");
         boolean serviceRunning = false;
         ActivityManager am = (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
         List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(50);
@@ -173,7 +173,7 @@ public class CellMapperMain extends Activity {
             }
         }
 
-        Log.i(LOG_TAG, "service is running: " + serviceRunning);
+        Log.d(LOG_TAG, "service is running: " + serviceRunning);
         return serviceRunning;
     }
 
@@ -200,11 +200,21 @@ public class CellMapperMain extends Activity {
     }
 
     private void upload() {
+        Log.i(LOG_TAG, "upload data");
         Cursor cursor = DbHandler.getAll(this);
         ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
         int max = DbHandler.getRows(this);
+        Log.i(LOG_TAG, "upload max " + max + " rows");
+
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        new AsyncExporterTask(bar, max, new UrlExporter(cursor, preferences)).execute();
+        if (null == preferences.getString("uploadUrl", null)) {
+            Toast toast = Toast.makeText(getApplicationContext(),
+                    "You need to set an upload URL before you can upload data.\n"
+                            + "Go to Settings > Account to enter access to an upload service.", Toast.LENGTH_LONG);
+            toast.show();
+        } else {
+            new AsyncExporterTask(bar, max, new UrlExporter(cursor, preferences)).execute();
+        }
     }
 
     private void dumpDataToFile() {

@@ -29,12 +29,38 @@ import de.locked.cellmapper.share.User;
 public class Rest {
     private static final String LOG_TAG = Rest.class.getName();
 
-    private final String server = "http://192.168.178.32:8084";
-    private final String signupUrl = "/cellmapper/rest/user/signUp/";
+    private final String server;// =
+                                // "http://192.168.178.32:8084/cellmapper/rest/";
+    private final String signupUrl = "user/signUp/";
     // userId, timestamp, signature
-    private final String uploadPattern = "/cellmapper/rest/data/%s/%d/%s/";
+    private final String uploadPattern = "data/%s/%d/%s/";
+
+    public Rest(String url) {
+        url = sanitizeUploadURL(url);
+        this.server = url;
+    }
+
+    private String sanitizeUploadURL(String url) {
+        Log.d(LOG_TAG, "sanitizing url: " + url);
+        if (url == null) {
+            return null;
+        }
+
+        url = url.trim();
+        if (url.length() != 0) {
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
+            if (!url.startsWith("http")) {
+                url = "http://" + url;
+            }
+        }
+        Log.d(LOG_TAG, "sanitized url: " + url);
+        return url;
+    }
 
     public final User signUp() throws ClientProtocolException, IOException {
+        Log.d(LOG_TAG, "request signup from " + server + signupUrl);
         HttpGet get = new HttpGet(server + signupUrl);
         HttpResponse httpResponse = new DefaultHttpClient().execute(get);
         String dataString = EntityUtils.toString(httpResponse.getEntity());

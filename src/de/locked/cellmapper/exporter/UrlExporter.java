@@ -3,7 +3,6 @@ package de.locked.cellmapper.exporter;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -21,30 +20,43 @@ public class UrlExporter implements DataExporter {
     private static final String LOG_TAG = UrlExporter.class.getName();
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private final int chunksize = 100;
-    private final Rest rest = new Rest();
+    private final Rest rest; // = new Rest(); add REST URL
     private final Cursor cursor;
     private final SharedPreferences preferences;
 
     public UrlExporter(Cursor cursor, SharedPreferences preferences) {
         this.cursor = cursor;
         this.preferences = preferences;
+        
+        String baseURL = preferences.getString("uploadUrl", null);
+        if (baseURL != null) {
+            rest = new Rest(baseURL);
+        } else {
+            Log.i(LOG_TAG, "no base URL given");
+            rest = null;
+        }
     }
 
     @Override
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
-
     }
 
     @Override
     public void process() {
+        if (rest == null) {
+            Log.i(LOG_TAG, "no Rest service initialized");
+            return;
+        }
+        
         try {
             User user = getUser();
-            if (user == null){
+            if (user == null) {
                 return;
             }
 
             // build the data list
+            int i = 0;
             Collection<Data> dataList = new ArrayList<Data>(chunksize);
             while (cursor.moveToNext()) {
                 Data data = new Data();
@@ -63,16 +75,19 @@ public class UrlExporter implements DataExporter {
                 data.carrier = cursor.getString(cursor.getColumnIndex("carrier"));
 
                 dataList.add(data);
+                i++;
 
                 if (dataList.size() == chunksize) {
-                    upload(user, new ArrayList<Data>(dataList));
+                    rest.putData(user, new ArrayList<Data>(dataList));
                     dataList.clear();
+                    pcs.firePropertyChange("status", 0, i);
                 }
             }
             cursor.close();
             if (!dataList.isEmpty()) {
-                upload(user, new ArrayList<Data>(dataList));
+                rest.putData(user, dataList);
                 dataList.clear();
+                pcs.firePropertyChange("status", 0, i);
             }
 
         } catch (ClientProtocolException e) {
@@ -83,22 +98,30 @@ public class UrlExporter implements DataExporter {
     }
 
     private User getUser() throws ClientProtocolException, IOException {
+        Log.i(LOG_TAG, "getting user login");
         User user = getUserFromPreference();
 
         // we don't have a user right now, auto acquire?
         if (user == null) {
+            Log.i(LOG_TAG, "no credentials given");
+
             String url = preferences.getString("uploadUrl", null);
-            boolean acquireLogin = preferences.getBoolean("acquireLogin", false);
-            if (url != null && acquireLogin) {
+            if (url != null) {
+                Log.i(LOG_TAG, "auto login allowed and url given");
+
                 User plainPassUser = rest.signUp();
                 user = encrypt(plainPassUser);
 
                 // if succeeded, save credentials
                 if (user != null) {
+                    Log.i(LOG_TAG, "got a user name!");
+
                     Editor editor = preferences.edit();
                     editor.putInt("login", plainPassUser.userId);
                     editor.putString("password", plainPassUser.secret);
                     editor.commit();
+                } else {
+                    Log.w(LOG_TAG, "auto login failed!");
                 }
             }
         }
@@ -116,11 +139,6 @@ public class UrlExporter implements DataExporter {
         }
 
         return null;
-    }
-
-    private void upload(User user, Collection<Data> dataList) throws UnsupportedEncodingException,
-            ClientProtocolException, IOException {
-        rest.putData(user, dataList);
     }
 
     // create the secret hash
