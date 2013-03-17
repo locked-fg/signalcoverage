@@ -140,7 +140,7 @@ public class DbLoggerService extends Service {
                         dataListener.onLocationChanged(getLocation());
 
                         // now wait for location updates
-                        Log.d(LOG_TAG, "wait "+updateDuration+"ms for updates");
+                        Log.d(LOG_TAG, "wait " + updateDuration + "ms for updates");
                         sleep(updateDuration);
 
                         // set asleep and wait for the next iteration
@@ -187,7 +187,6 @@ public class DbLoggerService extends Service {
      * Listen updates on location and signal provider
      */
     private void addListener() {
-        // just to be sure ...
         removeListener();
 
         Log.i(LOG_TAG, "add listeners");
@@ -198,8 +197,7 @@ public class DbLoggerService extends Service {
                 | PhoneStateListener.LISTEN_SERVICE_STATE);
 
         // init location listeners
-        boolean gpsEnabled = getGpsEnabled();
-        if (gpsEnabled) {
+        if (getGpsEnabled()) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
                     dataListener);
         }
@@ -207,6 +205,12 @@ public class DbLoggerService extends Service {
                 dataListener);
     }
 
+    private void removeListener() {
+        Log.i(LOG_TAG, "remove listeners");
+        locationManager.removeUpdates(dataListener);
+        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
+    }
+    
     /**
      * check if GPS is enabled. The user might have disabled it but want's to
      * use it - in this case: tell it to him
@@ -247,11 +251,5 @@ public class DbLoggerService extends Service {
         alertDialogBuilder.create().show();
     }
 
-    private void removeListener() {
-        Log.i(LOG_TAG, "remove listeners");
-        // unregister location
-        locationManager.removeUpdates(dataListener);
-        // unregister telephone
-        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
-    }
+
 }
