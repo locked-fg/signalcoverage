@@ -13,8 +13,8 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.util.Base64;
 import android.util.Log;
-import de.locked.cellmapper.share.Data;
-import de.locked.cellmapper.share.User;
+import de.locked.cellmapper.share.v1.Data;
+import de.locked.cellmapper.share.v1.User;
 
 public class UrlExporter implements DataExporter {
     private static final String LOG_TAG = UrlExporter.class.getName();

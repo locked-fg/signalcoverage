@@ -19,9 +19,9 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
-import de.locked.cellmapper.share.Data;
-import de.locked.cellmapper.share.Signer;
-import de.locked.cellmapper.share.User;
+import de.locked.cellmapper.share.v1.Data;
+import de.locked.cellmapper.share.v1.Signer;
+import de.locked.cellmapper.share.v1.User;
 
 /**
  * Wrapper for the Rest API
