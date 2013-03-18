@@ -70,17 +70,18 @@ public class FileExporter implements DataExporter {
                 // logging
                 if (n % 100 == 0) {
                     Log.d(LOG_TAG, "wrote " + n + "lines");
-                    pcs.firePropertyChange("progress", 0, n);
+                    pcs.firePropertyChange(EVT_STATUS, 0, n);
                 }
             }
             Log.i(LOG_TAG, "wrote " + n + "lines");
-            pcs.firePropertyChange("progress", 0, n);
+            pcs.firePropertyChange(EVT_STATUS, 0, n);
 
             csv.close();
             kml.close();
             cursor.close();
         } catch (IOException e) {
             Log.e(LOG_TAG, "io exception", e);
+            pcs.firePropertyChange(EVT_ERROR, null, "an error occured during upload");
         }
     }
 

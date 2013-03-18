@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 
 import android.os.AsyncTask;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 /**
  * Async task that queries the database and saves the result using the
@@ -14,6 +15,7 @@ public class AsyncExporterTask extends AsyncTask<Void, Integer, Void> {
     private final ProgressBar mProgress;
     private final DataExporter saver;
     private final int max;
+    private String error = null;
 
     public AsyncExporterTask(ProgressBar mProgress, int max, DataExporter saver) {
         this.mProgress = mProgress;
@@ -24,12 +26,16 @@ public class AsyncExporterTask extends AsyncTask<Void, Integer, Void> {
     @Override
     protected Void doInBackground(Void... params) {
         if (mProgress != null) {
-//            saver.addPropertyChangeListener(new ProgressUpdater(mProgress));
-//            saver.addPropertyChangeListener(this);
             saver.addPropertyChangeListener(new PropertyChangeListener() {
+
                 @Override
                 public void propertyChange(PropertyChangeEvent event) {
-                    publishProgress((Integer) event.getNewValue());
+                    String pName = event.getPropertyName();
+                    if (pName.equals(DataExporter.EVT_STATUS)) {
+                        publishProgress((Integer) event.getNewValue());
+                    } else if (pName.equals(DataExporter.EVT_ERROR)){
+                        error = event.getNewValue().toString();
+                    }
                 }
             });
         }
@@ -39,15 +45,18 @@ public class AsyncExporterTask extends AsyncTask<Void, Integer, Void> {
     }
 
     @Override
-    protected void onProgressUpdate(Integer... i){
-        if (i.length > 0){
+    protected void onProgressUpdate(Integer... i) {
+        if (i.length > 0) {
             mProgress.setProgress(i[0]);
         }
     }
-    
+
     @Override
     protected void onPostExecute(Void result) {
         mProgress.setVisibility(ProgressBar.GONE);
+        if (error != null){
+            Toast.makeText(mProgress.getContext(), "an Error occured: "+error, Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override

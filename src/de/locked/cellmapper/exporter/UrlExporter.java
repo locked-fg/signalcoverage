@@ -3,6 +3,7 @@ package de.locked.cellmapper.exporter;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -27,7 +28,7 @@ public class UrlExporter implements DataExporter {
     public UrlExporter(Cursor cursor, SharedPreferences preferences) {
         this.cursor = cursor;
         this.preferences = preferences;
-        
+
         String baseURL = preferences.getString("uploadUrl", null);
         if (baseURL != null) {
             rest = new Rest(baseURL);
@@ -48,7 +49,7 @@ public class UrlExporter implements DataExporter {
             Log.i(LOG_TAG, "no Rest service initialized");
             return;
         }
-        
+
         try {
             User user = getUser();
             if (user == null) {
@@ -78,22 +79,26 @@ public class UrlExporter implements DataExporter {
                 i++;
 
                 if (dataList.size() == chunksize) {
-                    rest.putData(user, new ArrayList<Data>(dataList));
-                    dataList.clear();
-                    pcs.firePropertyChange("status", 0, i);
+                    upload(user, dataList, i);
                 }
             }
             cursor.close();
             if (!dataList.isEmpty()) {
-                rest.putData(user, dataList);
-                dataList.clear();
-                pcs.firePropertyChange("status", 0, i);
+                upload(user, dataList, i);
             }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "error", e);
+            pcs.firePropertyChange(EVT_ERROR, null, e.getMessage());
+        }
+    }
 
-        } catch (ClientProtocolException e) {
-            Log.e(LOG_TAG, "protocol error", e);
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "IO error", e);
+    private void upload(User user, Collection<Data> dataList, int i) throws UnsupportedEncodingException,
+            ClientProtocolException, IOException {
+        int statusCode = rest.putData(user, dataList);
+        dataList.clear();
+        pcs.firePropertyChange(EVT_STATUS, 0, i);
+        if (statusCode != 200) {
+            pcs.firePropertyChange(EVT_ERROR, null, "Upload error, status code: "+statusCode);
         }
     }
 
@@ -134,7 +139,7 @@ public class UrlExporter implements DataExporter {
         String pass = preferences.getString("password", null);
 
         int login = 0;
-        if (loginString.trim().length() > 0){
+        if (loginString.trim().length() > 0) {
             login = Integer.parseInt(loginString);
         }
 
