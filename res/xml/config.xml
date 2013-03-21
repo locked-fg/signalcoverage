@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orderingFromXml="true"
-    >
+    android:orderingFromXml="true" >
 
-    <PreferenceScreen
-        android:orderingFromXml="true"
-        android:title="Positioning"
-        >
+    <PreferenceCategory android:title="Location" >
         <CheckBoxPreference
             android:enabled="true"
             android:key="use_gps"
-            android:summary="use GPS for fine positioning"
-            android:title="GPS on" />
+            android:summary="Enable GPS for fine positioning and to record areas without signal."
+            android:title="Use GPS" />
 
         <ListPreference
             android:defaultValue="60"
             android:entries="@array/updateInterval"
             android:entryValues="@array/updateIntervalValues"
             android:key="update_duration"
-            android:summary="Listen this long for updates until setting asleep"
+            android:summary="Listen this long for updates until setting asleep."
             android:title="Update Duration" />
         <ListPreference
             android:defaultValue="1"
@@ -27,41 +23,38 @@
             android:key="sleep_between_measures"
             android:summary="Time between measurements (reduce power consumption)"
             android:title="Sleep between updates" />
-
-        <PreferenceCategory
-            android:summary="Minimum time and location difference for updates"
-            android:title="Location updates" >
-            <ListPreference
-                android:entries="@array/minLocationTimeEntries"
-                android:entryValues="@array/minLocationTimeValues"
-                android:key="min_location_time"
-                android:summary="minimum time between updates"
-                android:title="Min time" />
-            <ListPreference
-                android:entries="@array/minLocationDistEntries"
-                android:entryValues="@array/minLocationDistValues"
-                android:key="min_location_dist"
-                android:summary="minimum distance between updates"
-                android:title="Min distance" />
-        </PreferenceCategory>
-    </PreferenceScreen>
-    <PreferenceScreen android:title="Account" >
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Update frequency" >
+        <ListPreference
+            android:entries="@array/minLocationTimeEntries"
+            android:entryValues="@array/minLocationTimeValues"
+            android:key="min_location_time"
+            android:summary="Minimum time between location updates."
+            android:title="Min time" />
+        <ListPreference
+            android:entries="@array/minLocationDistEntries"
+            android:entryValues="@array/minLocationDistValues"
+            android:key="min_location_dist"
+            android:summary="Minimum distance between location updates."
+            android:title="Min distance" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Upload Account" >
         <EditTextPreference
             android:key="uploadUrl"
             android:singleLine="true"
-            android:summary="The URL to which the data is uploaded"
+            android:summary="The URL to which the data is uploaded. Mind the licence agreement of the according service!"
             android:title="Upload URL" />
         <EditTextPreference
             android:key="login"
             android:singleLine="true"
-            android:summary="The login for the upload service"
+            android:summary="The login for the upload service. Leave empty of auto signup."
             android:title="Login" />
         <EditTextPreference
             android:key="password"
             android:password="true"
             android:singleLine="true"
-            android:summary="The password for the upload service"
+            android:summary="The password for the upload service."
             android:title="Password" />
-    </PreferenceScreen>
+    </PreferenceCategory>
 
 </PreferenceScreen>
