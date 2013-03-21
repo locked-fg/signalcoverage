@@ -1,10 +1,9 @@
 Cellmapper
 ===========
 
-Just an Android app to record signal data with GPS coordinates.
+An Android app to record signal data with GPS coordinates.
 
-This is a mirror of the google code project at
-http://code.google.com/p/cellmapper/
+You can export your data to CSV and KML or upload to a server.
 
 
 History:
