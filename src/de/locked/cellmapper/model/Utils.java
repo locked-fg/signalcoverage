@@ -1,14 +1,15 @@
 package de.locked.cellmapper.model;
 
-import java.util.Iterator;
-import java.util.List;
-
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.content.Context;
 import android.provider.Settings;
+import android.util.Log;
 
 public class Utils {
+    private static final String LOG_TAG = Utils.class.getName();
+
     private Utils() {
     };
 
@@ -20,18 +21,14 @@ public class Utils {
      * @return true if the service is running
      */
     public static boolean isServiceRunning(Context context, Class<?> serviceClass) {
+        String name  = serviceClass.getName();
         ActivityManager am = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(100);
-        Iterator<ActivityManager.RunningServiceInfo> i = l.iterator();
-        while (i.hasNext()) {
-            ActivityManager.RunningServiceInfo runningServiceInfo = i.next();
-            Class<?> sClass = runningServiceInfo.service.getClass();
-
-            if (sClass.equals(serviceClass)) {
+        for (RunningServiceInfo service : am.getRunningServices(Integer.MAX_VALUE)) {
+            Log.i(LOG_TAG, service.service.getClassName());
+            if (service.service.getClassName().equals(name)) {
                 return true;
             }
         }
-
         return false;
     }
     

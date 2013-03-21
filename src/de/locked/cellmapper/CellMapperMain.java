@@ -8,16 +8,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.NetworkInfo.State;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -49,13 +45,10 @@ public class CellMapperMain extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        networkInfo();
-
         handler = new Handler();
 
         // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.config, false);
-        startUiUpdates();
         ensureServiceStarted();
 
         final ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
@@ -70,26 +63,6 @@ public class CellMapperMain extends Activity {
                 }
             }
         });
-    }
-
-    private void networkInfo() {
-        ConnectivityManager service = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo a = service.getActiveNetworkInfo();
-        if (a != null) {
-            String extraInfo = a.getExtraInfo(); // eplus.de
-            State state = a.getState(); // http://developer.android.com/reference/android/net/NetworkInfo.State.html
-            String typeName = a.getTypeName(); // mobile
-            String subtypeName = a.getSubtypeName(); // HSDPA
-
-            Log.i(LOG_TAG, "extra: " + extraInfo);
-            Log.i(LOG_TAG, "state: " + state.toString());
-            Log.i(LOG_TAG, "type: " + typeName);
-            Log.i(LOG_TAG, "subtype: " + subtypeName);
-        }
-
-        TelephonyManager telephonyManager = ((TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE));
-        String carrier = telephonyManager.getNetworkOperatorName();
-        Log.i(LOG_TAG, "carrier: " + carrier);
     }
 
     @Override
@@ -113,14 +86,13 @@ public class CellMapperMain extends Activity {
     public void onDestroy() {
         super.onDestroy();
         Log.i(LOG_TAG, "destroy activity");
-
-        DbHandler.close();
-        stopUiUpdates();
         stopService();
+        DbHandler.close();
     }
 
     protected void stopService() {
         Log.d(LOG_TAG, "stopping service");
+        stopUiUpdates();
         stopService(new Intent(this, DbLoggerService.class));
     }
 
@@ -194,7 +166,7 @@ public class CellMapperMain extends Activity {
 
                     @Override
                     public void run() {
-                        boolean isRunning = Utils.isServiceRunning(getApplicationContext(), DbLoggerService.class);
+                        boolean isRunning = Utils.isServiceRunning(context, DbLoggerService.class);
                         ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
                         if (onOff.isChecked() != isRunning) {
                             onOff.setChecked(isRunning);
