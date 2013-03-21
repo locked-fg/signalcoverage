@@ -1,10 +1,6 @@
 package de.locked.cellmapper;
 
-import java.util.Iterator;
-import java.util.List;
-
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -39,7 +35,7 @@ import de.locked.cellmapper.model.Preferences;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
-    private static final int UI_REFRESH_INTERVAL = 100; // ms
+    private static final int UI_REFRESH_INTERVAL = 200; // ms
 
     private Thread refresher;
     private Handler handler;
@@ -67,12 +63,8 @@ public class CellMapperMain extends Activity {
             @Override
             public void onClick(View v) {
                 if (!onOff.isChecked()) {
-                    Log.i(LOG_TAG, "stopping");
-                    stopUiUpdates();
                     stopService();
                 } else {
-                    Log.i(LOG_TAG, "starting service");
-                    startUiUpdates();
                     ensureServiceStarted();
                 }
             }
@@ -127,17 +119,18 @@ public class CellMapperMain extends Activity {
     }
 
     protected void stopService() {
+        Log.d(LOG_TAG, "stopping service");
         stopService(new Intent(this, DbLoggerService.class));
     }
 
     private void ensureServiceStarted() {
-        if (isServiceRunning(DbLoggerService.class.getName())) {
+        Log.d(LOG_TAG, "ensuring that the service is up");
+        if (Utils.isServiceRunning(this, DbLoggerService.class)) {
             return;
         }
 
         // check if location check is allowed at all
-        String locationProvidersAllowed = Secure.getString(getContentResolver(),
-                Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+        String locationProvidersAllowed = Secure.getString(getContentResolver(), Secure.LOCATION_PROVIDERS_ALLOWED);
         if (locationProvidersAllowed == null || locationProvidersAllowed.length() == 0) {
             String msg = "Postitioning is completely disabled in your device. Please enable it.";
             Log.i(LOG_TAG, msg);
@@ -159,11 +152,14 @@ public class CellMapperMain extends Activity {
 
         // now start!
         Log.i(LOG_TAG, "starting service");
+        // stop the ui refresh thread to avoid starting service and checing if
+        // the service is running
+        stopUiUpdates();
         startService(new Intent(this, DbLoggerService.class));
+        startUiUpdates();
     }
 
     protected void startUiUpdates() {
-        // stopUiUpdates();
         // do nothing if we're alive
         if (refresher != null && refresher.isAlive()) {
             return;
@@ -193,22 +189,6 @@ public class CellMapperMain extends Activity {
             refresher.interrupt();
             refresher = null;
         }
-    }
-
-    private boolean isServiceRunning(String serviceName) {
-        ActivityManager am = (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(100);
-        Iterator<ActivityManager.RunningServiceInfo> i = l.iterator();
-        while (i.hasNext()) {
-            ActivityManager.RunningServiceInfo runningServiceInfo = i.next();
-            String sName = runningServiceInfo.service.getClassName();
-//            Log.d(LOG_TAG, sName);
-            if (sName.equals(serviceName)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     @Override
@@ -260,8 +240,6 @@ public class CellMapperMain extends Activity {
 
     private void refresh() {
         final StringBuilder sb = new StringBuilder(100);
-        sb.append("service running: "+isServiceRunning(DbLoggerService.class.getName())+"\n");
-        sb.append("------\n");
         sb.append(DbHandler.getLastEntryString(this)).append("\n");
         sb.append("Data rows: " + DbHandler.getRows(this)).append("\n");
         sb.append("------\n");
@@ -272,10 +250,13 @@ public class CellMapperMain extends Activity {
 
             @Override
             public void run() {
-//                ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
-//                onOff.setChecked(isServiceRunning(DbLoggerService.class.getName()));
-                TextView text = (TextView) findViewById(R.id.textfield);
-                text.setText(sb.toString());
+                boolean isRunning = Utils.isServiceRunning(getApplicationContext(), DbLoggerService.class);
+                ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
+                if (onOff.isChecked() != isRunning) {
+                    onOff.setChecked(isRunning);
+                }
+
+                ((TextView) findViewById(R.id.textfield)).setText(sb.toString());
             }
         });
     }
@@ -294,10 +275,8 @@ public class CellMapperMain extends Activity {
                 .setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        Intent callGPSSettingIntent = new Intent(
-                                android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                         dialog.dismiss();
-                        startActivity(callGPSSettingIntent);
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
