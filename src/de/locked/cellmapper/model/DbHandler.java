@@ -13,7 +13,7 @@ import android.provider.Settings;
 import android.util.Log;
 
 public class DbHandler {
-    public static final int ALLOWED_TIME_DRIFT = 30000;
+    public static final int ALLOWED_TIME_DRIFT = 10000;
     public static final String LOG_TAG = DbHandler.class.getName();
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";

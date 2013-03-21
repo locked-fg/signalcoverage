@@ -172,10 +172,11 @@ public class DbLoggerService extends Service {
             return null;
         }
 
-        // ONE is not null now
+        // ONE is not null now, set to Float Max if null
         float accNetwork = locationNetwork == null ? Float.MAX_VALUE : locationNetwork.getAccuracy();
         float accGps = locationGps == null ? Float.MAX_VALUE : locationGps.getAccuracy();
 
+        // return the more accurate one
         return accNetwork < accGps ? locationNetwork : locationGps;
     }
 
@@ -193,7 +194,7 @@ public class DbLoggerService extends Service {
                 | PhoneStateListener.LISTEN_SERVICE_STATE);
 
         // init location listeners
-        if (getGpsEnabled()) {
+        if (preferences.getBoolean(Preferences.use_gps, true)) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
                     dataListener);
         }
@@ -205,16 +206,5 @@ public class DbLoggerService extends Service {
         Log.i(LOG_TAG, "remove listeners");
         locationManager.removeUpdates(dataListener);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
-    }
-    
-    /**
-     * check if GPS is enabled. 
-     * 
-     * @return true if GPS is available
-     */
-    private boolean getGpsEnabled() {
-        boolean useGPS = preferences.getBoolean(Preferences.use_gps, true);
-        boolean gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        return gpsEnabled && useGPS;
     }
 }

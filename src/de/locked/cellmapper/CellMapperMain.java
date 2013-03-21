@@ -32,6 +32,7 @@ import de.locked.cellmapper.exporter.FileExporter;
 import de.locked.cellmapper.exporter.UrlExporter;
 import de.locked.cellmapper.model.DbHandler;
 import de.locked.cellmapper.model.Preferences;
+import de.locked.cellmapper.model.Utils;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
@@ -179,6 +180,30 @@ public class CellMapperMain extends Activity {
                     Log.i(LOG_TAG, "interrupted refresh thread");
                 }
             }
+            
+            private void refresh() {
+                final Context context = getApplicationContext();
+                final StringBuilder sb = new StringBuilder(100);
+                sb.append(DbHandler.getLastEntryString(context)).append("\n");
+                sb.append("Data rows: " + DbHandler.getRows(context)).append("\n");
+                sb.append("------\n");
+                sb.append(DbHandler.getLastRowAsString(context));
+
+                // update UI
+                handler.post(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        boolean isRunning = Utils.isServiceRunning(getApplicationContext(), DbLoggerService.class);
+                        ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
+                        if (onOff.isChecked() != isRunning) {
+                            onOff.setChecked(isRunning);
+                        }
+
+                        ((TextView) findViewById(R.id.textfield)).setText(sb.toString());
+                    }
+                });
+            }
 
         };
         refresher.start();
@@ -238,28 +263,7 @@ public class CellMapperMain extends Activity {
         new AsyncExporterTask(bar, max, new FileExporter("CellMapper/data", cursor)).execute();
     }
 
-    private void refresh() {
-        final StringBuilder sb = new StringBuilder(100);
-        sb.append(DbHandler.getLastEntryString(this)).append("\n");
-        sb.append("Data rows: " + DbHandler.getRows(this)).append("\n");
-        sb.append("------\n");
-        sb.append(DbHandler.getLastRowAsString(this));
 
-        // update UI
-        handler.post(new Runnable() {
-
-            @Override
-            public void run() {
-                boolean isRunning = Utils.isServiceRunning(getApplicationContext(), DbLoggerService.class);
-                ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
-                if (onOff.isChecked() != isRunning) {
-                    onOff.setChecked(isRunning);
-                }
-
-                ((TextView) findViewById(R.id.textfield)).setText(sb.toString());
-            }
-        });
-    }
 
     /**
      * show a pop up that tells the user that he wants GPS but it's disabled in

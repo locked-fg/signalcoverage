@@ -9,7 +9,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
@@ -38,13 +37,22 @@ public class DataListener extends PhoneStateListener implements LocationListener
             Log.i(LOG_TAG, "null location received, ignoring");
             return;
         }
-        if (isAirplaneModeOn()) {
+        if (Utils.isAirplaneModeOn(context)) {
             Log.i(LOG_TAG, "we are in airplane mode, ignore");
             return;
         }
 
         Log.i(LOG_TAG, "location update received");
         {
+//            ConnectivityManager service = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+//            NetworkInfo a = service.getActiveNetworkInfo();
+//            if (a != null) {
+//                String extraInfo = a.getExtraInfo(); // eplus.de
+//                State state = a.getState(); // http://developer.android.com/reference/android/net/NetworkInfo.State.html
+//                String typeName = a.getTypeName(); // mobile
+//                String subtypeName = a.getSubtypeName(); // HSDPA
+//            }
+//            
 //            // http://stackoverflow.com/questions/5499217/how-to-recognize-that-cyanogenmod-is-on-a-board/9801191
 //            // os stuff
 //            int sdkInt = Build.VERSION.SDK_INT; // API version
@@ -64,15 +72,6 @@ public class DataListener extends PhoneStateListener implements LocationListener
         int satellites = countSatellites();
         Data data = new Data(location, signal, satellites, carrier);
         DbHandler.save(data, context);
-    }
-
-    /**
-     * Gets the state of Airplane Mode.
-     * 
-     * @return true if enabled.
-     */
-    private boolean isAirplaneModeOn() {
-        return Settings.System.getInt(context.getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 0) != 0;
     }
 
     private int countSatellites() {
