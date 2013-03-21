@@ -14,6 +14,7 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.util.Base64;
 import android.util.Log;
+import de.locked.cellmapper.model.Preferences;
 import de.locked.cellmapper.share.v1.Data;
 import de.locked.cellmapper.share.v1.User;
 
@@ -29,7 +30,7 @@ public class UrlExporter implements DataExporter {
         this.cursor = cursor;
         this.preferences = preferences;
 
-        String baseURL = preferences.getString("uploadUrl", null);
+        String baseURL = preferences.getString(Preferences.uploadURL, null);
         if (baseURL != null) {
             rest = new Rest(baseURL);
         } else {
@@ -110,7 +111,7 @@ public class UrlExporter implements DataExporter {
         if (user == null) {
             Log.i(LOG_TAG, "no credentials given");
 
-            String url = preferences.getString("uploadUrl", null);
+            String url = preferences.getString(Preferences.uploadURL, null);
             if (url != null) {
                 Log.i(LOG_TAG, "auto login allowed and url given");
 
@@ -122,8 +123,8 @@ public class UrlExporter implements DataExporter {
                     Log.i(LOG_TAG, "got a user name!");
 
                     Editor editor = preferences.edit();
-                    editor.putString("login", Integer.toString(plainPassUser.userId));
-                    editor.putString("password", plainPassUser.secret);
+                    editor.putString(Preferences.login, Integer.toString(plainPassUser.userId));
+                    editor.putString(Preferences.password, plainPassUser.secret);
                     editor.commit();
                 } else {
                     Log.w(LOG_TAG, "auto login failed!");
@@ -135,8 +136,8 @@ public class UrlExporter implements DataExporter {
     }
 
     private User getUserFromPreference() {
-        String loginString = preferences.getString("login", "");
-        String pass = preferences.getString("password", null);
+        String loginString = preferences.getString(Preferences.login, "");
+        String pass = preferences.getString(Preferences.password, null);
 
         int login = 0;
         if (loginString.trim().length() > 0) {
