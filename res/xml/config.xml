@@ -3,11 +3,6 @@
     android:orderingFromXml="true" >
 
     <PreferenceCategory android:title="Location" >
-        <CheckBoxPreference
-            android:enabled="true"
-            android:key="use_gps"
-            android:summary="Enable GPS for fine positioning and to record areas without signal."
-            android:title="Use GPS" />
 
         <ListPreference
             android:defaultValue="60"

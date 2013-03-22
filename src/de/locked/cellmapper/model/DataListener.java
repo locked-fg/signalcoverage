@@ -63,7 +63,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
         }
 
         Log.i(LOG_TAG, "location update received");
-        {
+//        {
 //            
 //            // http://stackoverflow.com/questions/5499217/how-to-recognize-that-cyanogenmod-is-on-a-board/9801191
 //            // os stuff
@@ -78,7 +78,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
 //
 //            // os version: for example 2.6.37.6-cyanogenmod-01509-g8913be8
 //            String version = System.getProperty("os.version");
-        }
+//        }
 
         String carrier = telephonyManager.getNetworkOperatorName();
         int satellites = countSatellites();

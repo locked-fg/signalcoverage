@@ -31,7 +31,6 @@ public class DbLoggerService extends Service {
 
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
-    boolean useGPS = true;
 
     private SharedPreferences preferences;
     private DataListener dataListener;
@@ -45,7 +44,6 @@ public class DbLoggerService extends Service {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             Log.i(LOG_TAG, "preferences changed - restarting");
-            useGPS = preferences.getBoolean(Preferences.use_gps, true);
 
             sleepBetweenMeasures = getAsLong(Preferences.sleep_between_measures, "30") * 1000l;
             updateDuration = getAsLong(Preferences.update_duration, "30") * 1000l;
@@ -59,7 +57,7 @@ public class DbLoggerService extends Service {
             }
 
             stop();
-            start();
+            restart();
         }
     }
 
@@ -78,6 +76,8 @@ public class DbLoggerService extends Service {
         PreferenceLoader loader = new PreferenceLoader();
         preferences.registerOnSharedPreferenceChangeListener(loader);
         loader.onSharedPreferenceChanged(null, null);
+        
+        restart();
     }
 
     /**
@@ -120,7 +120,10 @@ public class DbLoggerService extends Service {
         return interval;
     }
 
-    private void start() {
+    private void restart() {
+        // don't start twice
+        stop();
+        
         // this is the main thread
         runner = new Thread() {
 
@@ -161,14 +164,17 @@ public class DbLoggerService extends Service {
         // too old locations are rejected later in the DbHandler
         final long limit = System.currentTimeMillis() - DbHandler.ALLOWED_TIME_DRIFT;
         if (locationNetwork != null && locationNetwork.getTime() < limit) {
+            Log.d(LOG_TAG, "rejecting too old network position");
             locationNetwork = null;
         }
         if (locationGps != null && locationGps.getTime() < limit) {
+            Log.d(LOG_TAG, "rejecting too old GPS position");
             locationGps = null;
         }
 
         // both can be null
         if (locationGps == null && locationNetwork == null) {
+            Log.d(LOG_TAG, "both locations rejected");
             return null;
         }
 
@@ -194,10 +200,8 @@ public class DbLoggerService extends Service {
                 | PhoneStateListener.LISTEN_SERVICE_STATE);
 
         // init location listeners
-        if (preferences.getBoolean(Preferences.use_gps, true)) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
                     dataListener);
-        }
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime, minLocationDistance,
                 dataListener);
     }

@@ -19,20 +19,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 import de.locked.cellmapper.exporter.AsyncExporterTask;
 import de.locked.cellmapper.exporter.FileExporter;
 import de.locked.cellmapper.exporter.UrlExporter;
 import de.locked.cellmapper.model.DbHandler;
-import de.locked.cellmapper.model.Preferences;
 import de.locked.cellmapper.model.Utils;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
-    private static final int UI_REFRESH_INTERVAL = 200; // ms
+    private static final int UI_REFRESH_INTERVAL = 500; // ms
 
     private Thread refresher;
     private Handler handler;
@@ -41,35 +40,37 @@ public class CellMapperMain extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(LOG_TAG, "create activity");
-
+        Log.d(LOG_TAG, "create activity");
         setContentView(R.layout.activity_main);
 
         handler = new Handler();
 
         // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.config, false);
-        ensureServiceStarted();
 
-        final ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
-        onOff.setOnClickListener(new OnClickListener() {
+        ((Button) findViewById(R.id.startButton)).setOnClickListener(new OnClickListener() {
 
             @Override
-            public void onClick(View v) {
-                if (!onOff.isChecked()) {
-                    stopService();
-                } else {
-                    ensureServiceStarted();
-                }
+            public void onClick(View arg0) {
+                ensureServiceStarted();
             }
         });
+        ((Button) findViewById(R.id.stopButton)).setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                stopService();
+            }
+        });
+        
+        startUiUpdates();
+        ensureServiceStarted();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(LOG_TAG, "resume activity");
-
+        Log.d(LOG_TAG, "resume activity");
         informedUserAboutProblems = false;
         startUiUpdates();
     }
@@ -77,8 +78,7 @@ public class CellMapperMain extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        Log.i(LOG_TAG, "pause activity");
-
+        Log.d(LOG_TAG, "pause activity");
         stopUiUpdates();
     }
 
@@ -87,12 +87,12 @@ public class CellMapperMain extends Activity {
         super.onDestroy();
         Log.i(LOG_TAG, "destroy activity");
         stopService();
+        stopUiUpdates();
         DbHandler.close();
     }
 
     protected void stopService() {
-        Log.d(LOG_TAG, "stopping service");
-        stopUiUpdates();
+        Log.i(LOG_TAG, "stopping service");
         stopService(new Intent(this, DbLoggerService.class));
     }
 
@@ -111,25 +111,18 @@ public class CellMapperMain extends Activity {
             return;
         }
 
-        // GPS requested but disabled
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean gpsRequested = preferences.getBoolean(Preferences.use_gps, true);
-
+        // GPS disabled
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         boolean gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if (gpsRequested && !gpsEnabled) {
-            String msg = "GPS is disabled in your device. Would you like to enable it?";
-            maybeShowGPSDisabledAlertToUser(msg);
+        if (!gpsEnabled) {
+            maybeShowGPSDisabledAlertToUser("GPS is disabled in your device. Please enable it.");
         }
 
         // now start!
         Log.i(LOG_TAG, "starting service");
         // stop the ui refresh thread to avoid starting service and checing if
         // the service is running
-        stopUiUpdates();
         startService(new Intent(this, DbLoggerService.class));
-        startUiUpdates();
     }
 
     protected void startUiUpdates() {
@@ -137,6 +130,7 @@ public class CellMapperMain extends Activity {
         if (refresher != null && refresher.isAlive()) {
             return;
         }
+        final Context context = getApplicationContext();
 
         refresher = new Thread() {
             @Override
@@ -152,10 +146,10 @@ public class CellMapperMain extends Activity {
                     Log.i(LOG_TAG, "interrupted refresh thread");
                 }
             }
-            
+
             private void refresh() {
-                final Context context = getApplicationContext();
                 final StringBuilder sb = new StringBuilder(100);
+                sb.append("Service Running: " + Utils.isServiceRunning(context, DbLoggerService.class)+"\n");
                 sb.append(DbHandler.getLastEntryString(context)).append("\n");
                 sb.append("Data rows: " + DbHandler.getRows(context)).append("\n");
                 sb.append("------\n");
@@ -166,12 +160,6 @@ public class CellMapperMain extends Activity {
 
                     @Override
                     public void run() {
-                        boolean isRunning = Utils.isServiceRunning(context, DbLoggerService.class);
-                        ToggleButton onOff = (ToggleButton) findViewById(R.id.onOffButton);
-                        if (onOff.isChecked() != isRunning) {
-                            onOff.setChecked(isRunning);
-                        }
-
                         ((TextView) findViewById(R.id.textfield)).setText(sb.toString());
                     }
                 });
@@ -234,8 +222,6 @@ public class CellMapperMain extends Activity {
         int max = DbHandler.getRows(this);
         new AsyncExporterTask(bar, max, new FileExporter("CellMapper/data", cursor)).execute();
     }
-
-
 
     /**
      * show a pop up that tells the user that he wants GPS but it's disabled in

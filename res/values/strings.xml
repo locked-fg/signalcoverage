@@ -9,6 +9,6 @@
     <string name="useGPS">use GPS</string>
     <string name="configButton">Config</string>
     
-	<string name="serviceOn">Service On</string>
-	<string name="serviceOff">Service Off</string>
+	<string name="start">Start</string>
+	<string name="stop">Stop</string>
 </resources>

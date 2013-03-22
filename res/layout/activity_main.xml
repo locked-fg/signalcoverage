@@ -9,13 +9,21 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
-        <ToggleButton
-            android:id="@+id/onOffButton"
-            android:layout_width="0dip"
+
+        <Button
+            android:id="@+id/startButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight=".5"
-            android:textOff="@string/serviceOff"
-            android:textOn="@string/serviceOn" />
+            android:text="@string/start" />
+
+        <Button
+            android:id="@+id/stopButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".5"
+            android:text="@string/stop" />
+
     </LinearLayout>
 
     <ProgressBar

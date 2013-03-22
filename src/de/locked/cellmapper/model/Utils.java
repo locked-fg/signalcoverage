@@ -3,6 +3,7 @@ package de.locked.cellmapper.model;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
+import android.app.Service;
 import android.content.Context;
 import android.provider.Settings;
 import android.util.Log;
@@ -20,7 +21,7 @@ public class Utils {
      * @param serviceClass
      * @return true if the service is running
      */
-    public static boolean isServiceRunning(Context context, Class<?> serviceClass) {
+    public static boolean isServiceRunning(Context context, Class<? extends Service> serviceClass) {
         String name  = serviceClass.getName();
         ActivityManager am = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
         for (RunningServiceInfo service : am.getRunningServices(Integer.MAX_VALUE)) {
