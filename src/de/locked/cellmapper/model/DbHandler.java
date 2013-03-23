@@ -13,7 +13,7 @@ import android.provider.Settings;
 import android.util.Log;
 
 public class DbHandler {
-    public static final int ALLOWED_TIME_DRIFT = 10000; //ms
+    public static final int ALLOWED_TIME_DRIFT = 5000; //ms
     public static final String LOG_TAG = DbHandler.class.getName();
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";
@@ -76,8 +76,6 @@ public class DbHandler {
             return;
         }
 
-        setupDB(context);
-
         // all location data
         long time = data.location.getTime();
         int timeSec = (int) (data.location.getTime() / 1000);
@@ -96,9 +94,11 @@ public class DbHandler {
             return;
         }
 
+        
         // /data/data/de.locked.cellmapper/databases/CellMapper
         // sqlite> select datetime(time, 'unixepoch', 'localtime') FROM Base
         // ORDER BY TIME DESC LIMIT 4;
+        setupDB(context);
         db.beginTransaction();
         try {
             int cdmaDbm = data.signal.getCdmaDbm();

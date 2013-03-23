@@ -19,7 +19,9 @@ import de.locked.cellmapper.model.Preferences;
 public class DbLoggerService extends Service {
     private static final String LOG_TAG = DbLoggerService.class.getName();
 
-    // get an update every this many meters
+    // max location age
+    private final long maxLocationAge = DbHandler.ALLOWED_TIME_DRIFT;
+    // get an update every this many meters (min distance)
     private float minLocationDistance = 50; // m
     // get an update every this many milliseconds
     private long minLocationTime = 5000; // ms
@@ -36,10 +38,12 @@ public class DbLoggerService extends Service {
     private DataListener dataListener;
     private Thread runner;
 
+    private Location lastLocation = null;
+
     class PreferenceLoader implements SharedPreferences.OnSharedPreferenceChangeListener {
 
         /**
-         * restart the process ehenever the preferences have changed
+         * restart the process whenever the preferences have changed
          */
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -52,9 +56,7 @@ public class DbLoggerService extends Service {
             minLocationDistance = getAsLong(Preferences.min_location_distance, "50");
 
             // ensure a minimum value
-            if (minLocationTime <= 1000) {
-                minLocationTime = 1000;
-            }
+            minLocationTime = Math.max(minLocationTime, 1000);
 
             stop();
             restart();
@@ -76,7 +78,7 @@ public class DbLoggerService extends Service {
         PreferenceLoader loader = new PreferenceLoader();
         preferences.registerOnSharedPreferenceChangeListener(loader);
         loader.onSharedPreferenceChanged(null, null);
-        
+
         restart();
     }
 
@@ -123,7 +125,7 @@ public class DbLoggerService extends Service {
     private void restart() {
         // don't start twice
         stop();
-        
+
         // this is the main thread
         runner = new Thread() {
 
@@ -135,14 +137,18 @@ public class DbLoggerService extends Service {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
 
-                        // get initial location
-                        dataListener.onLocationChanged(getLocation());
+                        final long stopPeriod = System.currentTimeMillis() + updateDuration;
+                        while (System.currentTimeMillis() < stopPeriod) {
+                            dataListener.onLocationChanged(getLocation());
+                            sleep(minLocationTime);
+                        }
 
                         // now wait for location updates
-                        Log.d(LOG_TAG, "wait " + updateDuration + "ms for updates");
-                        sleep(updateDuration);
+                        // Log.d(LOG_TAG, "wait " + updateDuration +
+                        // "ms for updates");
+                        // sleep(updateDuration);
 
-                        // set asleep and wait for the next iteration
+                        // set asleep and wait for the next measurement period
                         Log.d(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
                         removeListener();
                         sleep(sleepBetweenMeasures);
@@ -161,20 +167,16 @@ public class DbLoggerService extends Service {
         Location locationNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         Location locationGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        // too old locations are rejected later in the DbHandler
-        final long limit = System.currentTimeMillis() - DbHandler.ALLOWED_TIME_DRIFT;
+        // select the more recent one
+        final long limit = System.currentTimeMillis() - maxLocationAge;
         if (locationNetwork != null && locationNetwork.getTime() < limit) {
-            Log.d(LOG_TAG, "rejecting too old network position");
             locationNetwork = null;
         }
         if (locationGps != null && locationGps.getTime() < limit) {
-            Log.d(LOG_TAG, "rejecting too old GPS position");
             locationGps = null;
         }
 
-        // both can be null
         if (locationGps == null && locationNetwork == null) {
-            Log.d(LOG_TAG, "both locations rejected");
             return null;
         }
 
@@ -182,8 +184,16 @@ public class DbLoggerService extends Service {
         float accNetwork = locationNetwork == null ? Float.MAX_VALUE : locationNetwork.getAccuracy();
         float accGps = locationGps == null ? Float.MAX_VALUE : locationGps.getAccuracy();
 
-        // return the more accurate one
-        return accNetwork < accGps ? locationNetwork : locationGps;
+        // choose the more accurate one
+        Location theLocation = accNetwork < accGps ? locationNetwork : locationGps;
+
+        // check distance
+        if (lastLocation != null && theLocation.distanceTo(lastLocation) < minLocationDistance) {
+            return null;
+        }
+
+        lastLocation = theLocation;
+        return theLocation;
     }
 
     /**
@@ -201,7 +211,7 @@ public class DbLoggerService extends Service {
 
         // init location listeners
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
-                    dataListener);
+                dataListener);
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime, minLocationDistance,
                 dataListener);
     }
