@@ -6,7 +6,6 @@ import android.app.ActivityManager.RunningServiceInfo;
 import android.app.Service;
 import android.content.Context;
 import android.provider.Settings;
-import android.util.Log;
 
 public class Utils {
     private static final String LOG_TAG = Utils.class.getName();
@@ -25,7 +24,6 @@ public class Utils {
         String name  = serviceClass.getName();
         ActivityManager am = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
         for (RunningServiceInfo service : am.getRunningServices(Integer.MAX_VALUE)) {
-            Log.i(LOG_TAG, service.service.getClassName());
             if (service.service.getClassName().equals(name)) {
                 return true;
             }

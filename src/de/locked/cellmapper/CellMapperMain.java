@@ -116,12 +116,11 @@ public class CellMapperMain extends Activity {
         boolean gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if (!gpsEnabled) {
             maybeShowGPSDisabledAlertToUser("GPS is disabled in your device. Please enable it.");
+            return;
         }
 
         // now start!
         Log.i(LOG_TAG, "starting service");
-        // stop the ui refresh thread to avoid starting service and checing if
-        // the service is running
         startService(new Intent(this, DbLoggerService.class));
     }
 
@@ -154,6 +153,7 @@ public class CellMapperMain extends Activity {
                 sb.append("Data rows: " + DbHandler.getRows(context)).append("\n");
                 sb.append("------\n");
                 sb.append(DbHandler.getLastRowAsString(context));
+                final boolean isRunning = Utils.isServiceRunning(context, DbLoggerService.class);
 
                 // update UI
                 handler.post(new Runnable() {
@@ -161,6 +161,8 @@ public class CellMapperMain extends Activity {
                     @Override
                     public void run() {
                         ((TextView) findViewById(R.id.textfield)).setText(sb.toString());
+                        ((Button) findViewById(R.id.startButton)).setEnabled(!isRunning);
+                        ((Button) findViewById(R.id.stopButton)).setEnabled(isRunning);
                     }
                 });
             }

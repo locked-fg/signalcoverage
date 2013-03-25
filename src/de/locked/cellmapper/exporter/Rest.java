@@ -94,12 +94,10 @@ public class Rest {
      * @throws IOException
      * @throws ClientProtocolException
      */
-    private final int putData(int userId, int timestamp, String jsonPayload, String signature) throws IOException {
+    private final int putData(int userId, int timestamp, Collection<Data> dataList, String signature) throws IOException {
         String url = String.format(Locale.US, server + uploadPattern, //
                 userId, timestamp, signature);
-        Log.i(LOG_TAG, "URL: " + url + " \npayload size: " + jsonPayload.length() + " chars");
-        // Log.i(LOG_TAG, "payload: " + jsonPayload);
-
+        String jsonPayload = new Gson().toJson(dataList);
         HttpPut httpPut = new HttpPut(url);
         httpPut.setEntity(new StringEntity(jsonPayload));
         HttpResponse response = new DefaultHttpClient().execute(httpPut);
@@ -115,16 +113,11 @@ public class Rest {
      * @throws IOException
      */
     public final int putData(User user, Collection<Data> dataList) throws IOException {
-        for (Data data : dataList) {
-            data.userId = user.userId;
-        }
-
         int timestamp = (int) (Calendar.getInstance().getTimeInMillis() / 1000);
-        String jsonPayload = new Gson().toJson(dataList);
-        String signature = new Signer().createSignature(user.userId, user.secret, timestamp, jsonPayload);
+        String signature = new Signer().createSignature(user.userId, user.secret, timestamp, dataList);
 
         Log.d(LOG_TAG, String.format("Signature: %d / %s / %d / <jsonPayload> => %s", //
                 user.userId, user.secret, timestamp, signature));
-        return putData(user.userId, timestamp, jsonPayload, signature);
+        return putData(user.userId, timestamp, dataList, signature);
     }
 }
