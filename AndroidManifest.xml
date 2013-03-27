@@ -25,6 +25,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".CellMapperMain"
+            android:configChanges="keyboard|keyboardHidden|orientation"
             android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,6 +34,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ConfigActivity" />
+
         <service android:name=".DbLoggerService" />
     </application>
 

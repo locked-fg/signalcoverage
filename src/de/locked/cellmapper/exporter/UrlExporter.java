@@ -45,7 +45,7 @@ public class UrlExporter implements DataExporter {
     }
 
     @Override
-    public void process() {
+    public void process() throws IOException {
         if (rest == null) {
             Log.i(LOG_TAG, "no Rest service initialized");
             return;
@@ -87,9 +87,9 @@ public class UrlExporter implements DataExporter {
             if (!dataList.isEmpty()) {
                 upload(user, dataList, i);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             Log.e(LOG_TAG, "error", e);
-            pcs.firePropertyChange(EVT_ERROR, null, e.getMessage());
+            throw e;
         }
     }
 
@@ -99,11 +99,12 @@ public class UrlExporter implements DataExporter {
         dataList.clear();
         pcs.firePropertyChange(EVT_STATUS, 0, i);
         if (statusCode != 200) {
-            pcs.firePropertyChange(EVT_ERROR, null, "Upload error, status code: "+statusCode);
+            String message = "Upload error, status code: " + statusCode;
+            throw new IOException(message);
         }
     }
 
-    private User getUser() throws ClientProtocolException, IOException {
+    private User getUser() throws IOException {
         Log.i(LOG_TAG, "getting user login");
         User user = getUserFromPreference();
 
@@ -116,19 +117,20 @@ public class UrlExporter implements DataExporter {
                 Log.i(LOG_TAG, "auto login allowed and url given");
 
                 User plainPassUser = rest.signUp();
+                if (plainPassUser == null) { // no response
+                    String message = "The server did not respond properly. We did not get a username.";
+                    Log.w(LOG_TAG, message);
+                    throw new IOException(message);
+                }
+
                 user = encrypt(plainPassUser);
 
                 // if succeeded, save credentials
-                if (user != null) {
-                    Log.i(LOG_TAG, "got a user name!");
-
-                    Editor editor = preferences.edit();
-                    editor.putString(Preferences.login, Integer.toString(plainPassUser.userId));
-                    editor.putString(Preferences.password, plainPassUser.secret);
-                    editor.commit();
-                } else {
-                    Log.w(LOG_TAG, "auto login failed!");
-                }
+                Log.i(LOG_TAG, "got a user name: "+user.userId);
+                Editor editor = preferences.edit();
+                editor.putString(Preferences.login, Integer.toString(plainPassUser.userId));
+                editor.putString(Preferences.password, plainPassUser.secret);
+                editor.commit();
             }
         }
 
@@ -155,7 +157,7 @@ public class UrlExporter implements DataExporter {
     // create the secret hash
     private User encrypt(User user) {
         if (user == null) {
-            return null;
+            throw new NullPointerException("user must not be null");
         }
         String encrypted = Base64.encodeToString(User.makePass(user.userId, user.secret), Base64.DEFAULT);
         return new User(user.userId, encrypted);

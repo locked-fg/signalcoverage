@@ -2,8 +2,10 @@ package de.locked.cellmapper.exporter;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -12,6 +14,7 @@ import android.widget.Toast;
  * DataExporter while updating the given progress bar
  */
 public class AsyncExporterTask extends AsyncTask<Void, Integer, Void> {
+    private static final String LogTag = AsyncExporterTask.class.getName();
     private final ProgressBar mProgress;
     private final DataExporter saver;
     private final int max;
@@ -33,14 +36,17 @@ public class AsyncExporterTask extends AsyncTask<Void, Integer, Void> {
                     String pName = event.getPropertyName();
                     if (pName.equals(DataExporter.EVT_STATUS)) {
                         publishProgress((Integer) event.getNewValue());
-                    } else if (pName.equals(DataExporter.EVT_ERROR)){
-                        error = event.getNewValue().toString();
                     }
                 }
             });
         }
 
-        saver.process();
+        try {
+            saver.process();
+        } catch (IOException e) {
+            Log.w(LogTag, e);
+            error = e.getMessage();
+        }
         return null;
     }
 

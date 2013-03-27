@@ -32,7 +32,7 @@ public class FileExporter implements DataExporter {
     }
 
     @Override
-    public void process() {
+    public void process() throws IOException {
         try {
             File root = Environment.getExternalStorageDirectory();
             if (!root.canWrite()) {
@@ -81,7 +81,7 @@ public class FileExporter implements DataExporter {
             cursor.close();
         } catch (IOException e) {
             Log.e(LOG_TAG, "io exception", e);
-            pcs.firePropertyChange(EVT_ERROR, null, "an error occured during upload");
+            throw e;
         }
     }
 

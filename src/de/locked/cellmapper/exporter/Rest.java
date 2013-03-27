@@ -51,6 +51,7 @@ public class Rest {
         Log.d(LOG_TAG, "sanitizing url: " + url);
 
         url = url.trim();
+        url = url.replace(". ", ".");
         if (url.length() == 0) {
             throw new IllegalArgumentException("url must not be empty");
         }

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -38,6 +39,12 @@ public class CellMapperMain extends Activity {
     private boolean informedUserAboutProblems = false;
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        setContentView(R.layout.activity_main);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(LOG_TAG, "create activity");
@@ -62,7 +69,7 @@ public class CellMapperMain extends Activity {
                 stopService();
             }
         });
-        
+
         startUiUpdates();
         ensureServiceStarted();
     }
@@ -148,7 +155,7 @@ public class CellMapperMain extends Activity {
 
             private void refresh() {
                 final StringBuilder sb = new StringBuilder(100);
-                sb.append("Service Running: " + Utils.isServiceRunning(context, DbLoggerService.class)+"\n");
+                sb.append("Service Running: " + Utils.isServiceRunning(context, DbLoggerService.class) + "\n");
                 sb.append(DbHandler.getLastEntryString(context)).append("\n");
                 sb.append("Data rows: " + DbHandler.getRows(context)).append("\n");
                 sb.append("------\n");
