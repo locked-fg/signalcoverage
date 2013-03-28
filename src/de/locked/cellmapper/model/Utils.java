@@ -8,6 +8,7 @@ import android.content.Context;
 import android.provider.Settings;
 
 public class Utils {
+    @SuppressWarnings("unused")
     private static final String LOG_TAG = Utils.class.getName();
 
     private Utils() {

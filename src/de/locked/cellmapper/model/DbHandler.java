@@ -9,7 +9,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.provider.Settings;
 import android.util.Log;
 
 public class DbHandler {
@@ -72,7 +71,7 @@ public class DbHandler {
         }
 
         // don't save in airplane mode - it's clear that we won't have signal there
-        if (Settings.System.getInt(context.getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 0) != 0) {
+        if (Utils.isAirplaneModeOn(context)) {
             return;
         }
 

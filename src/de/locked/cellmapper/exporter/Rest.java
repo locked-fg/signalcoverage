@@ -1,17 +1,19 @@
 package de.locked.cellmapper.exporter;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Locale;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import android.util.Log;
@@ -28,17 +30,21 @@ import de.locked.cellmapper.share.v1.User;
 public class Rest {
     private static final String LOG_TAG = Rest.class.getName();
 
-    private final String server; // "http://192.168.178.32:8084/cellmapper/rest";
     private final String signupUrl = "/1/user/signUp/";
     // userId, timestamp, signature
     private final String uploadPattern = "/1/data/%s/%d/%s/";
+
+    private final String fullUploadURL;
+    private final String fullSignupURL;
 
     public Rest(String serverUrl) {
         if (serverUrl == null) {
             throw new NullPointerException("url must not be null");
         }
         serverUrl = sanitizeUploadURL(serverUrl);
-        this.server = serverUrl;
+        
+        this.fullUploadURL = serverUrl + uploadPattern;
+        this.fullSignupURL = serverUrl + signupUrl;
     }
 
     /**
@@ -68,10 +74,9 @@ public class Rest {
     }
 
     public final User signUp() throws ClientProtocolException, IOException {
-        String url = server + signupUrl;
-        Log.d(LOG_TAG, "request signup from " + url);
+        Log.d(LOG_TAG, "request signup from " + fullSignupURL);
 
-        HttpResponse httpResponse = new DefaultHttpClient().execute(new HttpGet(url));
+        HttpResponse httpResponse = new DefaultHttpClient().execute(new HttpGet(fullSignupURL));
         int status = httpResponse.getStatusLine().getStatusCode();
         if (200 != status) {
             Log.i(LOG_TAG, "response failed. Status: " + status);
@@ -84,30 +89,6 @@ public class Rest {
 
     /**
      * 
-     * @param userId
-     *            the remote user Id
-     * @param timestamp
-     *            timestamp (regular unix timestamp - seconds since 1970 in UTC)
-     * @param jsonPayload
-     * @param signature
-     * @return the status code
-     * @throws UnsupportedEncodingException
-     * @throws IOException
-     * @throws ClientProtocolException
-     */
-    private final int putData(int userId, int timestamp, Collection<Data> dataList, String signature) throws IOException {
-        String url = String.format(Locale.US, server + uploadPattern, //
-                userId, timestamp, signature);
-        String jsonPayload = new Gson().toJson(dataList);
-        HttpPut httpPut = new HttpPut(url);
-        httpPut.setEntity(new StringEntity(jsonPayload));
-        HttpResponse response = new DefaultHttpClient().execute(httpPut);
-        Log.i(LOG_TAG, "Response: " + response.getStatusLine().toString());
-        return response.getStatusLine().getStatusCode();
-    }
-
-    /**
-     * 
      * @param user
      * @param dataList
      * @return status code
@@ -116,9 +97,19 @@ public class Rest {
     public final int putData(User user, Collection<Data> dataList) throws IOException {
         int timestamp = (int) (Calendar.getInstance().getTimeInMillis() / 1000);
         String signature = new Signer().createSignature(user.userId, user.secret, timestamp, dataList);
-
-        Log.d(LOG_TAG, String.format("Signature: %d / %s / %d / <jsonPayload> => %s", //
-                user.userId, user.secret, timestamp, signature));
-        return putData(user.userId, timestamp, dataList, signature);
+        String url = String.format(Locale.US, fullUploadURL, //
+                user.userId, timestamp, signature);
+        String jsonPayload = new Gson().toJson(dataList);
+        
+        Header jsonHeader = new BasicHeader(HTTP.CONTENT_TYPE, "application/json");
+        StringEntity entity = new StringEntity(jsonPayload);
+        entity.setContentType(jsonHeader);
+        HttpPut httpPut = new HttpPut(url);
+//        httpPut.setHeader(jsonHeader);
+        httpPut.setEntity(entity);
+        HttpResponse response = new DefaultHttpClient().execute(httpPut);
+        
+        Log.i(LOG_TAG, "Response: " + response.getStatusLine().toString());
+        return response.getStatusLine().getStatusCode();
     }
 }

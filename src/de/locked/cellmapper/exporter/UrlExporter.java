@@ -24,7 +24,7 @@ public class UrlExporter implements DataExporter {
     private final Rest rest;
     private final Cursor cursor;
     private final SharedPreferences preferences;
-    private final int chunksize = 1000;
+    private final int chunksize = 10;
 
     public UrlExporter(Cursor cursor, SharedPreferences preferences) {
         this.cursor = cursor;
