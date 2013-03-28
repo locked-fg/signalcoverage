@@ -11,4 +11,8 @@
     
 	<string name="start">Start</string>
 	<string name="stop">Stop</string>
+	
+	<string name="cancel">Cancel</string>
+	<string name="open_settings">Open Settings</string>
+		
 </resources>

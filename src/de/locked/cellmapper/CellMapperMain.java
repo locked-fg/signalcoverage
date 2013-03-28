@@ -32,10 +32,10 @@ import de.locked.cellmapper.model.Utils;
 
 public class CellMapperMain extends Activity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
-    private static final int UI_REFRESH_INTERVAL = 500; // ms
+    private static final int UI_REFRESH_INTERVAL = 150; // ms
+    private final Handler handler = new Handler();
 
     private Thread refresher;
-    private Handler handler;
     private boolean informedUserAboutProblems = false;
 
     @Override
@@ -49,8 +49,6 @@ public class CellMapperMain extends Activity {
         super.onCreate(savedInstanceState);
         Log.d(LOG_TAG, "create activity");
         setContentView(R.layout.activity_main);
-
-        handler = new Handler();
 
         // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.config, false);
@@ -98,7 +96,7 @@ public class CellMapperMain extends Activity {
         DbHandler.close();
     }
 
-    protected void stopService() {
+    private void stopService() {
         Log.i(LOG_TAG, "stopping service");
         stopService(new Intent(this, DbLoggerService.class));
     }
@@ -131,7 +129,7 @@ public class CellMapperMain extends Activity {
         startService(new Intent(this, DbLoggerService.class));
     }
 
-    protected void startUiUpdates() {
+    private void startUiUpdates() {
         // do nothing if we're alive
         if (refresher != null && refresher.isAlive()) {
             return;
@@ -203,8 +201,9 @@ public class CellMapperMain extends Activity {
             case R.id.menu_saveSD:
                 dumpDataToFile();
                 return true;
+            default:
+                return false;
         }
-        return false;
     }
 
     private void upload() {
@@ -243,13 +242,13 @@ public class CellMapperMain extends Activity {
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage(message).setCancelable(false)
-                .setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.open_settings, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
                         startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                     }
-                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
