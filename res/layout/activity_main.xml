@@ -1,14 +1,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/LinearLayout1"
+    android:id="@+id/verticalMain"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:layout_gravity="right|center_vertical"
     android:gravity="top"
     android:orientation="vertical" >
 
     <LinearLayout
+        android:id="@+id/buttonsTop"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:layout_gravity="fill_horizontal" >
 
         <Button
             android:id="@+id/startButton"
@@ -23,19 +26,42 @@
             android:layout_height="wrap_content"
             android:layout_weight=".5"
             android:text="@string/stop" />
-
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/main_progressBar"
-        style="@android:style/Widget.ProgressBar.Horizontal"
+    <LinearLayout
+        android:id="@+id/progress"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:indeterminate="false"
+        android:layout_gravity="fill_horizontal"
         android:visibility="gone"
-        android:minHeight="10dip"
-    	android:maxHeight="10dip"
-         />
+         >
+
+        <ProgressBar
+            android:id="@+id/main_progressBar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="20dip"
+            android:layout_gravity="left|center_vertical"
+            android:layout_weight="0.9"
+            android:indeterminate="false" />
+
+<!--             android:visibility="gone" -->
+
+        <TextView
+            android:id="@+id/progressX"
+            android:layout_width="30dp"
+            android:layout_height="20dip"
+            android:layout_gravity="right|center_vertical"
+            android:layout_weight="0.1"
+            android:clickable="true"
+            android:gravity="center_horizontal"
+            android:longClickable="false"
+            android:onClick="cancelProgress"
+            android:text="@string/closeX"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="bold" />
+
+        </LinearLayout>
 
     <EditText
         android:id="@+id/textfield"
@@ -50,4 +76,5 @@
         android:inputType="none"
         android:textSize="15sp"
         android:typeface="monospace" />
+
 </LinearLayout>

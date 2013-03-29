@@ -1,7 +1,5 @@
 package de.locked.cellmapper.exporter;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,32 +9,26 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.database.Cursor;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 
-public class FileExporter implements DataExporter {
+public class FileExporter extends AbstractAsyncExporterTask {
     private static final String LOG_TAG = FileExporter.class.getName();
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private final String fileName;
-    private final Cursor cursor;
 
-    public FileExporter(String fileName, Cursor cursor) {
+    public FileExporter(View progressRow, ProgressBar mProgress, String fileName) {
+        super(progressRow, mProgress);
         this.fileName = fileName;
-        this.cursor = cursor;
     }
 
     @Override
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        pcs.addPropertyChangeListener(listener);
-    }
-
-    @Override
-    public void process() throws IOException {
+    protected Void doInBackground(Void... params) {
         try {
             File root = Environment.getExternalStorageDirectory();
             if (!root.canWrite()) {
-                return;
+                return null;
             }
 
             CsvFile csv = new CsvFile(fileName + ".csv");
@@ -50,7 +42,7 @@ public class FileExporter implements DataExporter {
             int signalStrength = cursor.getColumnIndex("signalStrength");
 
             List<String> values = new ArrayList<String>();
-            while (cursor.moveToNext()) {
+            while (cursor.moveToNext() && !isCancelled()) {
                 // write header
                 if (n == 0) {
                     csv.writeHead(cursor.getColumnNames());
@@ -70,19 +62,20 @@ public class FileExporter implements DataExporter {
                 // logging
                 if (n % 100 == 0) {
                     Log.d(LOG_TAG, "wrote " + n + "lines");
-                    pcs.firePropertyChange(EVT_STATUS, 0, n);
+                    publishProgress(n*100/max);
                 }
             }
             Log.i(LOG_TAG, "wrote " + n + "lines");
-            pcs.firePropertyChange(EVT_STATUS, 0, n);
 
             csv.close();
             kml.close();
             cursor.close();
         } catch (IOException e) {
             Log.e(LOG_TAG, "io exception", e);
-            throw e;
         }
+
+        publishProgress(100);
+        return null;
     }
 
     class KmlOutputStream extends FilterOutputStream {
@@ -221,5 +214,6 @@ public class FileExporter implements DataExporter {
             }
         }
     }
+
 
 }

@@ -7,8 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,10 +24,10 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import de.locked.cellmapper.exporter.AsyncExporterTask;
 import de.locked.cellmapper.exporter.FileExporter;
 import de.locked.cellmapper.exporter.UrlExporter;
 import de.locked.cellmapper.model.DbHandler;
+import de.locked.cellmapper.model.Preferences;
 import de.locked.cellmapper.model.Utils;
 
 public class CellMapperMain extends Activity {
@@ -37,6 +37,7 @@ public class CellMapperMain extends Activity {
 
     private Thread refresher;
     private boolean informedUserAboutProblems = false;
+    private AsyncTask<Void, Integer, Void> exporter;
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -65,6 +66,15 @@ public class CellMapperMain extends Activity {
             @Override
             public void onClick(View arg0) {
                 stopService();
+            }
+        });
+        ((TextView) findViewById(R.id.progressX)).setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                if (exporter != null){
+                    exporter.cancel(true);
+                }
             }
         });
 
@@ -195,12 +205,18 @@ public class CellMapperMain extends Activity {
             case R.id.menu_settings:
                 startActivity(new Intent(this, ConfigActivity.class));
                 return true;
+
             case R.id.menu_upload:
                 upload();
                 return true;
+
             case R.id.menu_saveSD:
-                dumpDataToFile();
+                ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
+                View row = findViewById(R.id.progress);
+                exporter = new FileExporter(row,bar, "CellMapper/data");
+                exporter.execute();
                 return true;
+
             default:
                 return false;
         }
@@ -208,27 +224,19 @@ public class CellMapperMain extends Activity {
 
     private void upload() {
         Log.i(LOG_TAG, "upload data");
-        Cursor cursor = DbHandler.getAll(this);
-        ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
-        int max = DbHandler.getRows(this);
-        Log.i(LOG_TAG, "upload " + max + " rows");
-
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (null == preferences.getString("uploadUrl", null)) {
+        if (null == preferences.getString(Preferences.uploadURL, null)) {
             Toast toast = Toast.makeText(getApplicationContext(),
                     "You need to set an upload URL before you can upload data.\n"
                             + "Go to Settings > Account to enter access to an upload service.", Toast.LENGTH_LONG);
             toast.show();
-        } else {
-            new AsyncExporterTask(bar, max, new UrlExporter(cursor, preferences)).execute();
+            return;
         }
-    }
 
-    private void dumpDataToFile() {
-        Cursor cursor = DbHandler.getAll(this);
         ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
-        int max = DbHandler.getRows(this);
-        new AsyncExporterTask(bar, max, new FileExporter("CellMapper/data", cursor)).execute();
+        View row = findViewById(R.id.progress);
+        exporter = new UrlExporter(row, bar, preferences);
+        exporter.execute();
     }
 
     /**

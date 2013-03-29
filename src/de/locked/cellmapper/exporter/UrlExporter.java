@@ -1,7 +1,5 @@
 package de.locked.cellmapper.exporter;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -11,56 +9,45 @@ import org.apache.http.client.ClientProtocolException;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.database.Cursor;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import de.locked.cellmapper.model.Preferences;
 import de.locked.cellmapper.share.v1.Data;
 import de.locked.cellmapper.share.v1.User;
 
-public class UrlExporter implements DataExporter {
+public class UrlExporter extends AbstractAsyncExporterTask {
     private static final String LOG_TAG = UrlExporter.class.getName();
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private final Rest rest;
-    private final Cursor cursor;
     private final SharedPreferences preferences;
-    private final int chunksize = 100;
+    private final int chunksize = 250;
 
-    public UrlExporter(Cursor cursor, SharedPreferences preferences) {
-        this.cursor = cursor;
+    public UrlExporter(View progressRow, ProgressBar mProgress, SharedPreferences preferences) {
+        super(progressRow, mProgress);
         this.preferences = preferences;
 
         String baseURL = preferences.getString(Preferences.uploadURL, null);
-        if (baseURL != null) {
-            rest = new Rest(baseURL);
-        } else {
-            Log.i(LOG_TAG, "no base URL given");
-            rest = null;
-        }
+        rest = (baseURL != null) ? new Rest(baseURL) : null;
     }
 
     @Override
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        pcs.addPropertyChangeListener(listener);
-    }
-
-    @Override
-    public void process() throws IOException {
+    protected Void doInBackground(Void... params) {
         if (rest == null) {
             Log.i(LOG_TAG, "no Rest service initialized");
-            return;
+            return null;
         }
 
         try {
             User user = getUser();
             if (user == null) {
-                return;
+                return null;
             }
 
             // build the data list
             int i = 0;
             Collection<Data> dataList = new ArrayList<Data>(chunksize);
-            while (cursor.moveToNext()) {
+            while (cursor.moveToNext() && !isCancelled()) {
                 Data data = new Data();
                 // data.userId = userId;
                 data.time = cursor.getInt(cursor.getColumnIndex("time"));
@@ -89,15 +76,17 @@ public class UrlExporter implements DataExporter {
             }
         } catch (IOException e) {
             Log.e(LOG_TAG, "error", e);
-            throw e;
         }
+        publishProgress(100);
+        return null;
     }
 
     private void upload(User user, Collection<Data> dataList, int i) throws UnsupportedEncodingException,
             ClientProtocolException, IOException {
         int statusCode = rest.putData(user, dataList);
         dataList.clear();
-        pcs.firePropertyChange(EVT_STATUS, 0, i);
+        publishProgress(i * 100 / max);
+
         if (statusCode != 200) {
             String message = "Upload error, status code: " + statusCode;
             throw new IOException(message);
@@ -126,7 +115,7 @@ public class UrlExporter implements DataExporter {
                 user = encrypt(plainPassUser);
 
                 // if succeeded, save credentials
-                Log.i(LOG_TAG, "got a user name: "+user.userId);
+                Log.i(LOG_TAG, "got a user name: " + user.userId);
                 Editor editor = preferences.edit();
                 editor.putString(Preferences.login, Integer.toString(plainPassUser.userId));
                 editor.putString(Preferences.password, plainPassUser.secret);
@@ -139,19 +128,18 @@ public class UrlExporter implements DataExporter {
 
     private User getUserFromPreference() {
         String loginString = preferences.getString(Preferences.login, "");
-        String pass = preferences.getString(Preferences.password, null);
+        String pass = preferences.getString(Preferences.password, "");
 
-        int login = 0;
-        if (loginString.trim().length() > 0) {
-            login = Integer.parseInt(loginString);
+        loginString = loginString.trim();
+        pass = pass.trim();
+
+        if (loginString.length() == 0 || pass.length() == 0) {
+            return null;
         }
 
-        if (login > 0 && pass != null) {
-            User user = new User(login, pass);
-            return encrypt(user);
-        }
-
-        return null;
+        int login = Integer.parseInt(loginString);
+        User user = new User(login, pass);
+        return encrypt(user);
     }
 
     // create the secret hash

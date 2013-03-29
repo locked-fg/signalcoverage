@@ -10,4 +10,6 @@ public interface DataExporter {
 
     public abstract void process() throws IOException;
 
+    public abstract void cancel();
+
 }
