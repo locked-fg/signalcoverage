@@ -1,6 +1,5 @@
 package de.locked.cellmapper;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,7 +15,6 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -24,13 +22,17 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+
 import de.locked.cellmapper.exporter.FileExporter;
 import de.locked.cellmapper.exporter.UrlExporter;
 import de.locked.cellmapper.model.DbHandler;
 import de.locked.cellmapper.model.Preferences;
 import de.locked.cellmapper.model.Utils;
 
-public class CellMapperMain extends Activity {
+public class CellMapperMain extends SherlockActivity{
     private static final String LOG_TAG = CellMapperMain.class.getName();
     private static final int UI_REFRESH_INTERVAL = 150; // ms
     private final Handler handler = new Handler();
@@ -195,8 +197,8 @@ public class CellMapperMain extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
-        return true;
+        getSupportMenuInflater().inflate(R.menu.activity_main, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

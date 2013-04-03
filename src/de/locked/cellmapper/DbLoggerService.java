@@ -212,8 +212,12 @@ public class DbLoggerService extends Service {
         // init location listeners
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
                 dataListener);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime, minLocationDistance,
-                dataListener);
+        try{
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime, minLocationDistance,
+                    dataListener);
+        } catch(IllegalArgumentException iae){
+            Log.w(LOG_TAG, "Network provider is unavailable?! This seems to be an issue with the emulator", iae);
+        }
     }
 
     private void removeListener() {
