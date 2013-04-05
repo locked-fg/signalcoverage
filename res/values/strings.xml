@@ -15,5 +15,7 @@
 	<string name="cancel">Cancel</string>
 	<string name="open_settings">Open Settings</string>
 	<string name="closeX">X</string>
-		
+	
+	<string name="ok">Ok</string>
+			
 </resources>

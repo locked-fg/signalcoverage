@@ -3,7 +3,6 @@
     android:orderingFromXml="true" >
 
     <PreferenceCategory android:title="Location" >
-
         <ListPreference
             android:defaultValue="60"
             android:entries="@array/updateInterval"
@@ -35,9 +34,10 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="Upload Account" >
         <EditTextPreference
+            android:defaultValue="https://signalcoverage-locked.rhcloud.com/rest/"
             android:key="uploadUrl"
             android:singleLine="true"
-            android:summary="The URL to which the data is uploaded. Mind the licence agreement of the according service!"
+            android:summary="The URL to which the data is uploaded."
             android:title="Upload URL" />
         <EditTextPreference
             android:key="login"
@@ -50,6 +50,12 @@
             android:singleLine="true"
             android:summary="The password for the upload service."
             android:title="Password" />
+
+        <CheckBoxPreference
+            android:key="licenseAgreed"
+            android:summaryOff="You have not (yet) agreed to the upload license. Uploading is disabled."
+            android:summaryOn="You agreed to the upload license. Uploading is enabled."
+            android:title="License agreed" />
     </PreferenceCategory>
 
 </PreferenceScreen>

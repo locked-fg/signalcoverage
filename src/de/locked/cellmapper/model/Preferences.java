@@ -8,4 +8,5 @@ public class Preferences {
     public static String uploadURL = "uploadUrl";
     public static String login = "login";
     public static String password = "password";
+    public static String licenseAgreed = "licenseAgreed";
 }
