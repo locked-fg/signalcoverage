@@ -49,16 +49,15 @@ public class DbLoggerService extends Service {
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             Log.i(LOG_TAG, "preferences changed - restarting");
 
-            sleepBetweenMeasures = getAsLong(Preferences.sleep_between_measures, "30") * 1000l;
-            updateDuration = getAsLong(Preferences.update_duration, "30") * 1000l;
+            sleepBetweenMeasures = getAsLong(Preferences.sleep_between_measures, 30) * 1000l;
+            updateDuration = getAsLong(Preferences.update_duration, 30) * 1000l;
 
-            minLocationTime = getAsLong(Preferences.min_location_time, "60") * 1000l;
-            minLocationDistance = getAsLong(Preferences.min_location_distance, "50");
+            minLocationTime = getAsLong(Preferences.min_location_time, 60) * 1000l;
+            minLocationDistance = getAsLong(Preferences.min_location_distance, 50);
 
             // ensure a minimum value
             minLocationTime = Math.max(minLocationTime, 1000);
 
-            stop();
             restart();
         }
     }
@@ -111,13 +110,18 @@ public class DbLoggerService extends Service {
         return null;
     }
 
-    private long getAsLong(String key, String def) {
-        String value = preferences.getString(key, def); // s
-        long interval = 0;
+    private long getAsLong(String key, long def) {
         try {
+            return preferences.getLong(key, def);
+        } catch (ClassCastException e) {
+        }
+
+        long interval = def;
+        try {
+            String value = preferences.getString(key, Long.toString(def));
             interval = Long.parseLong(value);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "value could not be parsed to long: " + key + " > " + value);
+            Log.e(LOG_TAG, "value could not be parsed to long: " + key, e);
         }
         return interval;
     }
@@ -137,26 +141,24 @@ public class DbLoggerService extends Service {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
 
+                        // request location updates for a period of
+                        // 'updateDuration'ms
                         final long stopPeriod = System.currentTimeMillis() + updateDuration;
                         while (System.currentTimeMillis() < stopPeriod) {
                             dataListener.onLocationChanged(getLocation());
                             sleep(minLocationTime);
                         }
 
-                        // now wait for location updates
-                        // Log.d(LOG_TAG, "wait " + updateDuration +
-                        // "ms for updates");
-                        // sleep(updateDuration);
-
                         // set asleep and wait for the next measurement period
                         Log.d(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
                         removeListener();
                         sleep(sleepBetweenMeasures);
                     }
-                    Looper.loop();
                 } catch (InterruptedException e) {
                     Log.i(LOG_TAG, "location thread interrupted");
                     removeListener();
+                } finally {
+                    Looper.myLooper().quit();
                 }
             }
         };
@@ -166,17 +168,23 @@ public class DbLoggerService extends Service {
     private Location getLocation() {
         Location locationNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         Location locationGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        final long maxLocationAgeSec = maxLocationAge / 1000;
 
         // select the more recent one
         final long limit = System.currentTimeMillis() - maxLocationAge;
         if (locationNetwork != null && locationNetwork.getTime() < limit) {
+            long age = (System.currentTimeMillis() - locationNetwork.getTime()) / 1000;
+            Log.d(LOG_TAG, "reject network location. Age: " + age + "s. Max: " + maxLocationAgeSec + "s");
             locationNetwork = null;
         }
         if (locationGps != null && locationGps.getTime() < limit) {
+            long age = (System.currentTimeMillis() - locationGps.getTime()) / 1000;
+            Log.d(LOG_TAG, "reject gps location. Age: " + age + "s. Max: " + maxLocationAgeSec + "s");
             locationGps = null;
         }
 
         if (locationGps == null && locationNetwork == null) {
+            Log.d(LOG_TAG, "both locations rejected");
             return null;
         }
 
@@ -185,15 +193,18 @@ public class DbLoggerService extends Service {
         float accGps = locationGps == null ? Float.MAX_VALUE : locationGps.getAccuracy();
 
         // choose the more accurate one
-        Location theLocation = accNetwork < accGps ? locationNetwork : locationGps;
+        Location newLocation = accNetwork < accGps ? locationNetwork : locationGps;
 
         // check distance
-        if (lastLocation != null && theLocation.distanceTo(lastLocation) < minLocationDistance) {
+        if (minLocationDistance > 0 && lastLocation != null
+                && newLocation.distanceTo(lastLocation) < minLocationDistance) {
+            float dist = newLocation.distanceTo(lastLocation);
+            Log.d(LOG_TAG, "location rejected due to distance limit. Distance to last location: " + dist + "m");
             return null;
         }
 
-        lastLocation = theLocation;
-        return theLocation;
+        lastLocation = newLocation;
+        return newLocation;
     }
 
     /**
@@ -212,10 +223,10 @@ public class DbLoggerService extends Service {
         // init location listeners
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
                 dataListener);
-        try{
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime, minLocationDistance,
-                    dataListener);
-        } catch(IllegalArgumentException iae){
+        try {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime,
+                    minLocationDistance, dataListener);
+        } catch (IllegalArgumentException iae) {
             Log.w(LOG_TAG, "Network provider is unavailable?! This seems to be an issue with the emulator", iae);
         }
     }

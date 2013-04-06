@@ -20,6 +20,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
     private final Context context;
     private final LocationManager locationManager;
     private final TelephonyManager telephonyManager;
+    private GpsStatus gpsStatus = null;
 //    private final ConnectivityManager connectivityManager;
 
     private SignalStrength signal;
@@ -87,7 +88,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
     }
 
     private int countSatellites() {
-        GpsStatus gpsStatus = locationManager.getGpsStatus(null);
+        gpsStatus = locationManager.getGpsStatus(gpsStatus);
         int i = 0;
         if (gpsStatus != null) {
             Iterator<GpsSatellite> it = gpsStatus.getSatellites().iterator();
