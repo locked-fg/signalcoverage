@@ -22,7 +22,7 @@ public class DbLoggerService extends Service {
     // max location age
     private final long maxLocationAge = DbHandler.ALLOWED_TIME_DRIFT;
     // get an update every this many meters (min distance)
-    private float minLocationDistance = 50; // m
+    private long minLocationDistance = 50; // m
     // get an update every this many milliseconds
     private long minLocationTime = 5000; // ms
 
@@ -49,11 +49,11 @@ public class DbLoggerService extends Service {
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             Log.i(LOG_TAG, "preferences changed - restarting");
 
-            sleepBetweenMeasures = getAsLong(Preferences.sleep_between_measures, 30) * 1000l;
-            updateDuration = getAsLong(Preferences.update_duration, 30) * 1000l;
+            sleepBetweenMeasures =  Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 30)*1000l;
+            updateDuration = Preferences.getAsLong(preferences, Preferences.update_duration, 30) * 1000l;
 
-            minLocationTime = getAsLong(Preferences.min_location_time, 60) * 1000l;
-            minLocationDistance = getAsLong(Preferences.min_location_distance, 50);
+            minLocationTime = Preferences.getAsLong(preferences, Preferences.min_location_time, 60) * 1000l;
+            minLocationDistance = Preferences.getAsLong(preferences, Preferences.min_location_distance, 50);
 
             // ensure a minimum value
             minLocationTime = Math.max(minLocationTime, 1000);
@@ -110,23 +110,7 @@ public class DbLoggerService extends Service {
         return null;
     }
 
-    private long getAsLong(String key, long def) {
-        try {
-            return preferences.getLong(key, def);
-        } catch (ClassCastException e) {
-        }
-
-        long interval = def;
-        try {
-            String value = preferences.getString(key, Long.toString(def));
-            interval = Long.parseLong(value);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "value could not be parsed to long: " + key, e);
-        }
-        return interval;
-    }
-
-    private void restart() {
+    private synchronized void restart() {
         // don't start twice
         stop();
 
@@ -135,8 +119,10 @@ public class DbLoggerService extends Service {
 
             @Override
             public void run() {
+                setName("LoggerServiceThread");
                 try {
                     Looper.prepare();
+//                    Looper.loop();
                     while (!isInterrupted()) {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
@@ -145,6 +131,7 @@ public class DbLoggerService extends Service {
                         // 'updateDuration'ms
                         final long stopPeriod = System.currentTimeMillis() + updateDuration;
                         while (System.currentTimeMillis() < stopPeriod) {
+                            Log.d(LOG_TAG, "request location update");
                             dataListener.onLocationChanged(getLocation());
                             sleep(minLocationTime);
                         }
