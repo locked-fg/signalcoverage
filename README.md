@@ -10,7 +10,7 @@ is hosted at OpenShift and is in an early beta phase.
 
 History:
 =========
-v2.0.0: Lots of rewrites & bug fixes / Server API / Android 4 compatibility 
+v2.0.0: Lots of rewrites & bug fixes / less permissions required / Server API / Android 4 compatibility 
 v1.0.1: Removed non working menu option
 v1:     Hello World!
 
