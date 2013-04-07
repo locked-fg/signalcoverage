@@ -1,11 +1,12 @@
-SignalCoverage (formerly called Cellmapper)
+SignalCoverage 
 ===========
+(formerly called Cellmapper)
 
 An Android app to record signal data with GPS coordinates.
 You can export your data to CSV and KML or upload to a server.
 
-Currently [the only server side application](signalcoverage-locked.rhcloud.com)
-is hosted at OpenShift and is in an early beta phase.
+Currently the only server side application is hosted at 
+[signalcoverage-locked.rhcloud.com](https://signalcoverage-locked.rhcloud.com) and is in an early beta phase.
 
 
 History:
