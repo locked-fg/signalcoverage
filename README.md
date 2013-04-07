@@ -2,7 +2,8 @@ SignalCoverage
 ===========
 (formerly called Cellmapper)
 
-An Android app to record signal data with GPS coordinates.
+An [Android app](https://play.google.com/store/apps/details?id=de.locked.cellmapper)
+to record signal data with GPS coordinates.
 You can export your data to CSV and KML or upload to a server.
 
 Currently the only server side application is hosted at 
@@ -11,9 +12,9 @@ Currently the only server side application is hosted at
 
 History:
 =========
-v2.0.0: Lots of rewrites & bug fixes / less permissions required / Server API / Android 4 compatibility 
-v1.0.1: Removed non working menu option
-v1:     Hello World!
+* v2.0.0: Lots of rewrites & bug fixes / less permissions required / Server API / Android 4 compatibility 
+* v1.0.1: Removed non working menu option
+* v1:     Hello World!
 
 
 License:
