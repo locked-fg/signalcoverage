@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.locked.cellmapper"
-    android:versionCode="3"
-    android:versionName="2" >
+    android:versionCode="4"
+    android:versionName="2.0.1" >
 
     <uses-sdk
         android:minSdkVersion="7"
@@ -29,7 +29,6 @@
             android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

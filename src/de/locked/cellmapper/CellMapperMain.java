@@ -239,7 +239,7 @@ public class CellMapperMain extends SherlockActivity {
             final Context context = this;
             openDialog("In order to upload you first must agree that you agree to the license of the " +
             		"service to which you are uploading your data.",
-                    R.string.ok, new DialogInterface.OnClickListener() {
+                    android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int id) {
                             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -283,7 +283,7 @@ public class CellMapperMain extends SherlockActivity {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage(message).setCancelable(false)
                 .setPositiveButton(okId, okListener)
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
