@@ -216,7 +216,7 @@ public class CellMapperMain extends SherlockActivity {
             case R.id.menu_saveSD:
                 ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
                 View row = findViewById(R.id.progress);
-                exporter = new FileExporter(row, bar, "CellMapper/data");
+                exporter = new FileExporter(row, bar, "SignalStrength/data");
                 exporter.execute();
                 return true;
 
