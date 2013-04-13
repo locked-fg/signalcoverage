@@ -16,6 +16,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -36,8 +37,10 @@ public class Rest {
 
     private final String fullUploadURL;
     private final String fullSignupURL;
+    private final Context context;
 
-    public Rest(String serverUrl) {
+    public Rest(Context context, String serverUrl) {
+        this.context = context;
         if (serverUrl == null) {
             throw new NullPointerException("url must not be null");
         }

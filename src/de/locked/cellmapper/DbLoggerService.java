@@ -47,7 +47,6 @@ public class DbLoggerService extends Service {
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-
         dataListener = new DataListener(this);
 
         // restart on preference change
@@ -55,7 +54,9 @@ public class DbLoggerService extends Service {
                 new OnSharedPreferenceChangeListener() {
                     @Override
                     public void onSharedPreferenceChanged(SharedPreferences p, String key) {
-                        restart();
+                        if (isRunning()){
+                            restart();
+                        }
                     }
                 });
 
@@ -78,12 +79,16 @@ public class DbLoggerService extends Service {
         stop();
     }
 
+    private boolean isRunning(){
+        return runner != null && runner.isAlive();
+    }
+    
     private void stop() {
+        removeListener();
         if (runner != null) {
             runner.interrupt();
         }
         runner = null;
-        removeListener();
     }
 
     @Override
@@ -105,10 +110,8 @@ public class DbLoggerService extends Service {
     }
 
     private synchronized void restart() {
-        loadPreferences();
-
-        // don't start twice
         stop();
+        loadPreferences();
 
         // this is the main thread
         runner = new Thread() {
@@ -148,46 +151,45 @@ public class DbLoggerService extends Service {
         runner.start();
     }
 
+    private boolean timeOk(Location l){
+        if (l == null) return false;
+        
+        long limit = System.currentTimeMillis() - maxLocationAge;
+        return l.getTime() > limit;
+    }
+    
+    private boolean distOk(Location l){
+        if (l == null) return false;
+        if (lastLocation == null) return true;
+        if (minLocationDistance <= 0) return true;
+        
+        return l.distanceTo(lastLocation) > minLocationDistance;
+    }
+    
     private Location getLocation() {
         Location network = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         Location gps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        long limit = System.currentTimeMillis() - maxLocationAge;
-        long maxLocationAgeSec = maxLocationAge / 1000;
-
-        float accNetwork = network.getAccuracy();
-        float accGps = gps.getAccuracy();
-
-        // filter too old locations
-        if (network != null && network.getTime() < limit) {
-            long age = (System.currentTimeMillis() - network.getTime()) / 1000;
-            Log.d(LOG_TAG, "reject network location. Age: " + age + "s. Max: " + maxLocationAgeSec + "s");
+        // filter too old / near locations
+        if (!timeOk(network) || !distOk(network)) {
             network = null;
-            accNetwork = Float.MAX_VALUE;
         }
-        if (gps != null && gps.getTime() < limit) {
-            long age = (System.currentTimeMillis() - gps.getTime()) / 1000;
-            Log.d(LOG_TAG, "reject gps location. Age: " + age + "s. Max: " + maxLocationAgeSec + "s");
+        if (!timeOk(gps) || !distOk(gps)) {
             gps = null;
-            accGps = Float.MAX_VALUE;
         }
 
+        // get more accurate location (mind the nulls) 
+        Location location = null;
         if (gps == null && network == null) {
-            Log.d(LOG_TAG, "both locations rejected");
             return null;
+        } else if (gps == null && network != null) {
+            location = network;
+        } else if (gps != null && network == null){
+            location = gps;
+        } else if (gps != null && network != null){
+            location = gps.getAccuracy() < network.getAccuracy() ? gps : network;
         }
-
-        // choose the more accurate one
-        Location location = accNetwork < accGps ? network : gps;
-
-        // check distance
-        if (minLocationDistance > 0 && lastLocation != null && location.distanceTo(lastLocation) < minLocationDistance) {
-            Log.d(LOG_TAG,
-                    "location rejected due to distance limit. Distance to last location: "
-                            + location.distanceTo(lastLocation) + "m");
-            return null;
-        }
-
+        
         lastLocation = location;
         return location;
     }
@@ -196,9 +198,8 @@ public class DbLoggerService extends Service {
      * Listen updates on location and signal provider
      */
     private void addListener() {
-        removeListener();
-
         Log.i(LOG_TAG, "add listeners");
+        removeListener();
 
         // initPhoneState listener
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS

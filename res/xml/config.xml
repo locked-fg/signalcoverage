@@ -40,18 +40,24 @@
             android:key="uploadUrl"
             android:singleLine="true"
             android:summary="The URL to which the data is uploaded."
-            android:title="Upload URL" />
+            android:title="Upload URL"
+            android:inputType="textNoSuggestions"
+             />
         <EditTextPreference
             android:key="login"
             android:singleLine="true"
             android:summary="The login for the upload service. Leave empty of auto signup."
-            android:title="Login" />
+            android:title="Login"
+            android:inputType="textNoSuggestions"
+            />
         <EditTextPreference
             android:key="password"
             android:password="true"
             android:singleLine="true"
             android:summary="The password for the upload service."
-            android:title="Password" />
+            android:title="Password"
+            android:inputType="textNoSuggestions"
+             />
 
         <CheckBoxPreference
             android:defaultValue="false"

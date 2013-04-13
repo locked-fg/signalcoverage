@@ -45,8 +45,6 @@
             android:layout_weight="0.9"
             android:indeterminate="false" />
 
-<!--             android:visibility="gone" -->
-
         <TextView
             android:id="@+id/progressX"
             android:layout_width="30dp"
@@ -73,7 +71,7 @@
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:gravity="top"
-        android:inputType="none"
+        android:inputType="none|textMultiLine|textNoSuggestions"
         android:textSize="15sp"
         android:typeface="monospace" />
 

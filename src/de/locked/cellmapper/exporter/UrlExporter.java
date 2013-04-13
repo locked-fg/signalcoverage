@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import org.apache.http.client.ClientProtocolException;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.util.Base64;
@@ -27,8 +28,10 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         super(progressRow, mProgress);
         this.preferences = preferences;
 
+        Context context = mProgress.getContext();
+        
         String baseURL = preferences.getString(Preferences.uploadURL, null);
-        rest = (baseURL != null) ? new Rest(baseURL) : null;
+        rest = (baseURL != null) ? new Rest(context, baseURL) : null;
     }
 
     @Override

@@ -20,7 +20,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
@@ -227,34 +226,31 @@ public class CellMapperMain extends SherlockActivity {
 
     private void upload() {
         Log.i(LOG_TAG, "upload data");
-        
+
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String url = preferences.getString(Preferences.uploadURL, null);
-        
+
         if (null == url || url.trim().length() == 0) {
-            openSettings("You need to set an upload URL before you can upload data\n" +
-            		"Do you want to enter an upload URL now?");
+            openSettings("You need to set an upload URL before you can upload data\n"
+                    + "Do you want to enter an upload URL now?");
             return;
         }
 
-        if (false == preferences.getBoolean(Preferences.licenseAgreed, false)) {
-            final Context context = this;
-            openDialog("In order to upload you first must agree that you agree to the license of the " +
-            		"service to which you are uploading your data.",
-                    android.R.string.ok, new DialogInterface.OnClickListener() {
+        if (!preferences.getBoolean(Preferences.licenseAgreed, false)) {
+            openDialog("In order to upload, you first must agree that you agree to the license of the "
+                    + "service to which you are uploading your data. Do you agree to the "
+                    + "license to the service to which you are uploading?", android.R.string.ok,
+                    new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int id) {
                             preferences.edit().putBoolean(Preferences.licenseAgreed, true).commit();
                             dialog.cancel();
                         }
                     });
-            // User did not agree :-(
-            if (false == preferences.getBoolean(Preferences.licenseAgreed, false)) {
-                Toast.makeText(context, "Not agreed to license. Upload aborted", Toast.LENGTH_LONG).show();
-                return;
-            }
+            Log.d(LOG_TAG, "agreed: "+preferences.getBoolean(Preferences.licenseAgreed, false));
+            return;
         }
-        
+
         ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
         View row = findViewById(R.id.progress);
         exporter = new UrlExporter(row, bar, preferences);
@@ -269,21 +265,19 @@ public class CellMapperMain extends SherlockActivity {
         if (informedUserAboutProblems) {
             return;
         }
-        openDialog(message, R.string.open_settings, 
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.dismiss();
-                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                    }
-                });
+        openDialog(message, R.string.open_settings, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            }
+        });
         informedUserAboutProblems = true;
     }
 
-    private void openDialog(String message, int okId, DialogInterface.OnClickListener okListener){
+    private void openDialog(String message, int okId, DialogInterface.OnClickListener okListener) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage(message).setCancelable(false)
-                .setPositiveButton(okId, okListener)
+        alertDialogBuilder.setMessage(message).setCancelable(false).setPositiveButton(okId, okListener)
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
@@ -292,8 +286,8 @@ public class CellMapperMain extends SherlockActivity {
                 });
         alertDialogBuilder.create().show();
     }
-    
-    private void openSettings(String message){
+
+    private void openSettings(String message) {
         final Context context = this;
         openDialog(message, R.string.open_settings, new DialogInterface.OnClickListener() {
             @Override
