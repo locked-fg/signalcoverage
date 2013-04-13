@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 public class DbHandler {
-    public static final int ALLOWED_TIME_DRIFT = 5000; //ms
+    public static final int ALLOWED_TIME_DRIFT = 15000; //ms
     public static final String LOG_TAG = DbHandler.class.getName();
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";

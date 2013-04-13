@@ -149,45 +149,47 @@ public class DbLoggerService extends Service {
     }
 
     private Location getLocation() {
-        Location locationNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        Location locationGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        final long maxLocationAgeSec = maxLocationAge / 1000;
+        Location network = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        Location gps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        // select the more recent one
-        final long limit = System.currentTimeMillis() - maxLocationAge;
-        if (locationNetwork != null && locationNetwork.getTime() < limit) {
-            long age = (System.currentTimeMillis() - locationNetwork.getTime()) / 1000;
+        long limit = System.currentTimeMillis() - maxLocationAge;
+        long maxLocationAgeSec = maxLocationAge / 1000;
+
+        float accNetwork = network.getAccuracy();
+        float accGps = gps.getAccuracy();
+
+        // filter too old locations
+        if (network != null && network.getTime() < limit) {
+            long age = (System.currentTimeMillis() - network.getTime()) / 1000;
             Log.d(LOG_TAG, "reject network location. Age: " + age + "s. Max: " + maxLocationAgeSec + "s");
-            locationNetwork = null;
+            network = null;
+            accNetwork = Float.MAX_VALUE;
         }
-        if (locationGps != null && locationGps.getTime() < limit) {
-            long age = (System.currentTimeMillis() - locationGps.getTime()) / 1000;
+        if (gps != null && gps.getTime() < limit) {
+            long age = (System.currentTimeMillis() - gps.getTime()) / 1000;
             Log.d(LOG_TAG, "reject gps location. Age: " + age + "s. Max: " + maxLocationAgeSec + "s");
-            locationGps = null;
+            gps = null;
+            accGps = Float.MAX_VALUE;
         }
 
-        if (locationGps == null && locationNetwork == null) {
+        if (gps == null && network == null) {
             Log.d(LOG_TAG, "both locations rejected");
             return null;
         }
 
-        // ONE is not null now, set to Float Max if null
-        float accNetwork = locationNetwork == null ? Float.MAX_VALUE : locationNetwork.getAccuracy();
-        float accGps = locationGps == null ? Float.MAX_VALUE : locationGps.getAccuracy();
-
         // choose the more accurate one
-        Location newLocation = accNetwork < accGps ? locationNetwork : locationGps;
+        Location location = accNetwork < accGps ? network : gps;
 
         // check distance
-        if (minLocationDistance > 0 && lastLocation != null
-                && newLocation.distanceTo(lastLocation) < minLocationDistance) {
-            float dist = newLocation.distanceTo(lastLocation);
-            Log.d(LOG_TAG, "location rejected due to distance limit. Distance to last location: " + dist + "m");
+        if (minLocationDistance > 0 && lastLocation != null && location.distanceTo(lastLocation) < minLocationDistance) {
+            Log.d(LOG_TAG,
+                    "location rejected due to distance limit. Distance to last location: "
+                            + location.distanceTo(lastLocation) + "m");
             return null;
         }
 
-        lastLocation = newLocation;
-        return newLocation;
+        lastLocation = location;
+        return location;
     }
 
     /**

@@ -101,7 +101,6 @@ public class DataListener extends PhoneStateListener implements LocationListener
 
     @Override
     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-        Log.d(LOG_TAG, "signal strength update received");
         this.signal = signalStrength;
     }
 

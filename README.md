@@ -12,6 +12,7 @@ Currently the only server side application is hosted at
 
 History:
 =========
+* v2.0.2: Hopefully fixed Issue #5
 * v2.0.1: Fixed renamings
 * v2.0.0: Lots of rewrites & bug fixes / less permissions required / Server API / Android 4 compatibility 
 * v1.0.1: Removed non working menu option
