@@ -7,13 +7,13 @@ import java.util.Collection;
 
 import org.apache.http.client.ClientProtocolException;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 import de.locked.cellmapper.model.Preferences;
 import de.locked.cellmapper.share.v1.Data;
 import de.locked.cellmapper.share.v1.User;
@@ -28,10 +28,8 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         super(progressRow, mProgress);
         this.preferences = preferences;
 
-        Context context = mProgress.getContext();
-        
         String baseURL = preferences.getString(Preferences.uploadURL, null);
-        rest = (baseURL != null) ? new Rest(context, baseURL) : null;
+        rest = (baseURL != null) ? new Rest(baseURL) : null;
     }
 
     @Override
@@ -78,6 +76,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 upload(user, dataList, i);
             }
         } catch (IOException e) {
+            Toast.makeText(getContext(), "error: "+ e.getMessage(), Toast.LENGTH_LONG).show();
             Log.e(LOG_TAG, "error", e);
         }
         publishProgress(100);

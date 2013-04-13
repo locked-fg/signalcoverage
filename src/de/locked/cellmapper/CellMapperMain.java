@@ -39,12 +39,8 @@ public class CellMapperMain extends SherlockActivity {
     private Thread refresher;
     private boolean informedUserAboutProblems = false;
     private AsyncTask<Void, Integer, Void> exporter;
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        setContentView(R.layout.activity_main);
-    }
+    
+    private DbHandler db;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,6 +50,8 @@ public class CellMapperMain extends SherlockActivity {
 
         // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.config, false);
+        db = DbHandler.get(this);
+        
 
         ((Button) findViewById(R.id.startButton)).setOnClickListener(new OnClickListener() {
 
@@ -84,6 +82,12 @@ public class CellMapperMain extends SherlockActivity {
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        setContentView(R.layout.activity_main);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         Log.d(LOG_TAG, "resume activity");
@@ -104,7 +108,7 @@ public class CellMapperMain extends SherlockActivity {
         Log.i(LOG_TAG, "destroy activity");
         stopService();
         stopUiUpdates();
-        DbHandler.close();
+        db.close();
     }
 
     private void stopService() {
@@ -165,10 +169,10 @@ public class CellMapperMain extends SherlockActivity {
             private void refresh() {
                 final StringBuilder sb = new StringBuilder(100);
                 sb.append("Service Running: " + Utils.isServiceRunning(context, DbLoggerService.class) + "\n");
-                sb.append(DbHandler.getLastEntryString(context)).append("\n");
-                sb.append("Data rows: " + DbHandler.getRows(context)).append("\n");
+                sb.append(db.getLastEntryString()).append("\n");
+                sb.append("Data rows: " + db.getRows()).append("\n");
                 sb.append("------\n");
-                sb.append(DbHandler.getLastRowAsString(context));
+                sb.append(db.getLastRowAsString());
                 final boolean isRunning = Utils.isServiceRunning(context, DbLoggerService.class);
 
                 // update UI
@@ -247,7 +251,7 @@ public class CellMapperMain extends SherlockActivity {
                             dialog.cancel();
                         }
                     });
-            Log.d(LOG_TAG, "agreed: "+preferences.getBoolean(Preferences.licenseAgreed, false));
+            Log.d(LOG_TAG, "agreed: " + preferences.getBoolean(Preferences.licenseAgreed, false));
             return;
         }
 

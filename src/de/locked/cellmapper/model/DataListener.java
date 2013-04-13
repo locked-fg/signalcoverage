@@ -20,6 +20,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
     private final Context context;
     private final LocationManager locationManager;
     private final TelephonyManager telephonyManager;
+    private final DbHandler db;
     private GpsStatus gpsStatus = null;
 //    private final ConnectivityManager connectivityManager;
 
@@ -30,6 +31,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
         this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         this.telephonyManager = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
 //        this.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        db = DbHandler.get(context);
     }
 
 //  private void networkInfo() {
@@ -84,7 +86,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
         String carrier = telephonyManager.getNetworkOperatorName();
         int satellites = countSatellites();
         Data data = new Data(location, signal, satellites, carrier);
-        DbHandler.save(data, context);
+        db.save(data);
     }
 
     private int countSatellites() {

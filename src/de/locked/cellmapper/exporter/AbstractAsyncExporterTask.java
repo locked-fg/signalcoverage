@@ -21,14 +21,20 @@ public abstract class AbstractAsyncExporterTask extends AsyncTask<Void, Integer,
     //
     protected final Cursor cursor;
     protected final int max;
+    private final Context context;
 
     public AbstractAsyncExporterTask(View progressRow, ProgressBar mProgress) {
         this.progressRow = progressRow;
         this.mProgress = mProgress;
         
-        Context context = progressRow.getContext();
-        this.cursor = DbHandler.getAll(context);
-        this.max = DbHandler.getRows(context);
+        this.context = progressRow.getContext();
+        DbHandler db = DbHandler.get(context);
+        this.cursor = db.getAll();
+        this.max = db.getRows();
+    }
+    
+    protected Context getContext(){
+        return context;
     }
 
     @Override
