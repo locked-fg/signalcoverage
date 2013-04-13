@@ -20,15 +20,16 @@ public class Preferences {
             long value = preferences.getLong(key, def);
             return value;
         } catch (ClassCastException e) {
-            Log.d(LOG_TAG, "no long value found for key: " + key, e);
+            Log.d(LOG_TAG, "no long value found for key: " + key);
         }
 
+        String valueString = null;
         try {
-            String valueString = preferences.getString(key, Long.toString(def));
+            valueString = preferences.getString(key, Long.toString(def));
             long value = Long.parseLong(valueString);
             return value;
         } catch (Exception e) {
-            Log.d(LOG_TAG, "value could not be parsed to long: " + key, e);
+            Log.d(LOG_TAG, "value '"+valueString+"' could not be parsed to long: " + key);
         }
 
         if (!preferences.getAll().containsKey(key)) {

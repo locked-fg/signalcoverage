@@ -20,12 +20,14 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="Update frequency" >
         <ListPreference
+            android:defaultValue="5"
             android:entries="@array/minLocationTimeEntries"
             android:entryValues="@array/minLocationTimeValues"
             android:key="min_location_time"
             android:summary="Minimum time between location updates."
             android:title="Min time" />
         <ListPreference
+            android:defaultValue="-1"
             android:entries="@array/minLocationDistEntries"
             android:entryValues="@array/minLocationDistValues"
             android:key="min_location_dist"
@@ -52,6 +54,7 @@
             android:title="Password" />
 
         <CheckBoxPreference
+            android:defaultValue="false"
             android:key="licenseAgreed"
             android:summaryOff="You have not (yet) agreed to the upload license. Uploading is disabled."
             android:summaryOn="You agreed to the upload license. Uploading is enabled."

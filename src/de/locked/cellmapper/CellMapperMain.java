@@ -227,8 +227,10 @@ public class CellMapperMain extends SherlockActivity {
 
     private void upload() {
         Log.i(LOG_TAG, "upload data");
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String url = preferences.getString(Preferences.uploadURL, null);
+        
         if (null == url || url.trim().length() == 0) {
             openSettings("You need to set an upload URL before you can upload data\n" +
             		"Do you want to enter an upload URL now?");
@@ -242,14 +244,13 @@ public class CellMapperMain extends SherlockActivity {
                     android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int id) {
-                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
                             preferences.edit().putBoolean(Preferences.licenseAgreed, true).commit();
                             dialog.cancel();
                         }
                     });
             // User did not agree :-(
             if (false == preferences.getBoolean(Preferences.licenseAgreed, false)) {
-                Toast.makeText(context, ":-(",Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Not agreed to license. Upload aborted", Toast.LENGTH_LONG).show();
                 return;
             }
         }

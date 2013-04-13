@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.IBinder;
@@ -34,33 +35,10 @@ public class DbLoggerService extends Service {
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
 
-    private SharedPreferences preferences;
     private DataListener dataListener;
     private Thread runner;
 
     private Location lastLocation = null;
-
-    class PreferenceLoader implements SharedPreferences.OnSharedPreferenceChangeListener {
-
-        /**
-         * restart the process whenever the preferences have changed
-         */
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            Log.i(LOG_TAG, "preferences changed - restarting");
-
-            sleepBetweenMeasures =  Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 30)*1000l;
-            updateDuration = Preferences.getAsLong(preferences, Preferences.update_duration, 30) * 1000l;
-
-            minLocationTime = Preferences.getAsLong(preferences, Preferences.min_location_time, 60) * 1000l;
-            minLocationDistance = Preferences.getAsLong(preferences, Preferences.min_location_distance, 50);
-
-            // ensure a minimum value
-            minLocationTime = Math.max(minLocationTime, 1000);
-
-            restart();
-        }
-    }
 
     @Override
     public void onCreate() {
@@ -70,13 +48,16 @@ public class DbLoggerService extends Service {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        dataListener = new DataListener(getApplicationContext());
+        dataListener = new DataListener(this);
 
         // restart on preference change
-        PreferenceLoader loader = new PreferenceLoader();
-        preferences.registerOnSharedPreferenceChangeListener(loader);
-        loader.onSharedPreferenceChanged(null, null);
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(
+                new OnSharedPreferenceChangeListener() {
+                    @Override
+                    public void onSharedPreferenceChanged(SharedPreferences p, String key) {
+                        restart();
+                    }
+                });
 
         restart();
     }
@@ -110,7 +91,22 @@ public class DbLoggerService extends Service {
         return null;
     }
 
+    private void loadPreferences() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        sleepBetweenMeasures = Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 30) * 1000l;
+        updateDuration = Preferences.getAsLong(preferences, Preferences.update_duration, 30) * 1000l;
+
+        minLocationTime = Preferences.getAsLong(preferences, Preferences.min_location_time, 60) * 1000l;
+        minLocationDistance = Preferences.getAsLong(preferences, Preferences.min_location_distance, 50);
+
+        // ensure a minimum value
+        minLocationTime = Math.max(minLocationTime, 1000);
+    }
+
     private synchronized void restart() {
+        loadPreferences();
+
         // don't start twice
         stop();
 
@@ -122,7 +118,7 @@ public class DbLoggerService extends Service {
                 setName("LoggerServiceThread");
                 try {
                     Looper.prepare();
-//                    Looper.loop();
+                    // Looper.loop();
                     while (!isInterrupted()) {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
