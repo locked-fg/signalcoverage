@@ -12,7 +12,7 @@ Currently the only server side application is hosted at
 
 History:
 =========
-* HEAD:   Issue fixed #4 (DB handling)
+* v2.0.3: Issue fixed #4 (DB handling)
 * v2.0.2: Issue fixed #5 (hopefully), suppressed spell check in several input fields, Issue fixed #6 
 * v2.0.1: Fixed renamings
 * v2.0.0: Lots of rewrites & bug fixes / less permissions required / Server API / Android 4 compatibility 
