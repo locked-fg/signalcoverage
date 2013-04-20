@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,7 +17,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockActivity;
@@ -38,7 +36,6 @@ public class CellMapperMain extends SherlockActivity {
 
     private Thread refresher;
     private boolean informedUserAboutProblems = false;
-    private AsyncTask<Void, Integer, Void> exporter;
     
     private DbHandler db;
 
@@ -65,15 +62,6 @@ public class CellMapperMain extends SherlockActivity {
             @Override
             public void onClick(View arg0) {
                 stopService();
-            }
-        });
-        ((TextView) findViewById(R.id.progressX)).setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View arg0) {
-                if (exporter != null) {
-                    exporter.cancel(true);
-                }
             }
         });
 
@@ -217,10 +205,7 @@ public class CellMapperMain extends SherlockActivity {
                 return true;
 
             case R.id.menu_saveSD:
-                ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
-                View row = findViewById(R.id.progress);
-                exporter = new FileExporter(row, bar, "SignalStrength/data");
-                exporter.execute();
+                new FileExporter(this, "SignalStrength/data").execute();
                 return true;
 
             default:
@@ -255,10 +240,7 @@ public class CellMapperMain extends SherlockActivity {
             return;
         }
 
-        ProgressBar bar = (ProgressBar) findViewById(R.id.main_progressBar);
-        View row = findViewById(R.id.progress);
-        exporter = new UrlExporter(row, bar, preferences);
-        exporter.execute();
+        new UrlExporter(this).execute();
     }
 
     /**

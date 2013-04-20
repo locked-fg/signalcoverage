@@ -7,13 +7,13 @@ import java.util.Collection;
 
 import org.apache.http.client.ClientProtocolException;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.Toast;
+import de.locked.cellmapper.R;
 import de.locked.cellmapper.model.Preferences;
 import de.locked.cellmapper.share.v1.Data;
 import de.locked.cellmapper.share.v1.User;
@@ -22,12 +22,12 @@ public class UrlExporter extends AbstractAsyncExporterTask {
     private static final String LOG_TAG = UrlExporter.class.getName();
     private final Rest rest;
     private final SharedPreferences preferences;
-    private final int chunksize = 250;
+    private final int chunksize = 300;
 
-    public UrlExporter(View progressRow, ProgressBar mProgress, SharedPreferences preferences) {
-        super(progressRow, mProgress);
-        this.preferences = preferences;
+    public UrlExporter(Context context) {
+        super(context, R.string.exportNotificationUrl, android.R.drawable.ic_menu_upload);
 
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
         String baseURL = preferences.getString(Preferences.uploadURL, null);
         rest = (baseURL != null) ? new Rest(baseURL) : null;
     }
@@ -76,8 +76,9 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 upload(user, dataList, i);
             }
         } catch (IOException e) {
-            Toast.makeText(getContext(), "error: "+ e.getMessage(), Toast.LENGTH_LONG).show();
-            Log.e(LOG_TAG, "error", e);
+            notify("Encountered an issue: " + e.getMessage(), android.R.drawable.stat_notify_error);
+            // android.R.drawable.stat_notify_sdcard_usb
+            return null;
         }
         publishProgress(100);
         return null;

@@ -9,17 +9,17 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
+import de.locked.cellmapper.R;
 
 public class FileExporter extends AbstractAsyncExporterTask {
     private static final String LOG_TAG = FileExporter.class.getName();
     private final String fileName;
 
-    public FileExporter(View progressRow, ProgressBar mProgress, String fileName) {
-        super(progressRow, mProgress);
+    public FileExporter(Context context, String fileName) {
+        super(context, R.string.exportNotificationSd, android.R.drawable.ic_menu_save);
         this.fileName = fileName;
     }
 
@@ -60,9 +60,9 @@ public class FileExporter extends AbstractAsyncExporterTask {
 
                 n++;
                 // logging
-                if (n % 100 == 0) {
+                if (n % 40 == 0) {
                     Log.d(LOG_TAG, "wrote " + n + "lines");
-                    publishProgress(n*100/max);
+                    publishProgress(n * 100 / max);
                 }
             }
             Log.i(LOG_TAG, "wrote " + n + "lines");
@@ -71,7 +71,8 @@ public class FileExporter extends AbstractAsyncExporterTask {
             kml.close();
             cursor.close();
         } catch (IOException e) {
-            Log.e(LOG_TAG, "io exception", e);
+            notify("Encountered an issue: " + e.getMessage(), android.R.drawable.stat_notify_error);
+            return null;
         }
 
         publishProgress(100);
@@ -214,6 +215,5 @@ public class FileExporter extends AbstractAsyncExporterTask {
             }
         }
     }
-
 
 }

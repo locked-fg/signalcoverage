@@ -14,4 +14,8 @@
 	<string name="open_settings">Open Settings</string>
 	<string name="closeX">X</string>
 	
+	<string name="exportNotificationHeadline">SignalCoverage Data Export</string>
+	<string name="exportNotificationSd">Save to SD: %d%%</string>
+	<string name="exportNotificationUrl">Upload progress: %d%%</string>
+					
 </resources>

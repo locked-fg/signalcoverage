@@ -28,39 +28,6 @@
             android:text="@string/stop" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/progress"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="fill_horizontal"
-        android:visibility="gone"
-         >
-
-        <ProgressBar
-            android:id="@+id/main_progressBar"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="fill_parent"
-            android:layout_height="20dip"
-            android:layout_gravity="left|center_vertical"
-            android:layout_weight="0.9"
-            android:indeterminate="false" />
-
-        <TextView
-            android:id="@+id/progressX"
-            android:layout_width="30dp"
-            android:layout_height="20dip"
-            android:layout_gravity="right|center_vertical"
-            android:layout_weight="0.1"
-            android:clickable="true"
-            android:gravity="center_horizontal"
-            android:longClickable="false"
-            android:onClick="cancelProgress"
-            android:text="@string/closeX"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textStyle="bold" />
-
-        </LinearLayout>
-
     <EditText
         android:id="@+id/textfield"
         android:layout_width="fill_parent"

@@ -12,6 +12,7 @@ Currently the only server side application is hosted at
 
 History:
 =========
+* v2.0.4: Progressbar moved to Notifications (fixed #1)
 * v2.0.3: Issue fixed #4 (DB handling)
 * v2.0.2: Issue fixed #5 (hopefully), suppressed spell check in several input fields, Issue fixed #6 
 * v2.0.1: Fixed renamings
