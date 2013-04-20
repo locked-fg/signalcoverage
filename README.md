@@ -9,7 +9,7 @@ Currently the only server side application is hosted at
 [signalcoverage-locked.rhcloud.com](https://signalcoverage-locked.rhcloud.com) and is in an early beta phase.
 
 
-# Upload Protocol:
+## Upload Protocol:
 In order to upload your data to a server, a very simple protocol is used.
 In order to avoid some hazzle about details, the 
 [signalcoverage-share](https://github.com/locked-fg/signalcoverage-share/tree/master/src/main/java/de/locked/cellmapper/share/v1)
@@ -17,7 +17,7 @@ library covers some implementations.
 
 The conversion from/to JSON is currently done via [GSON](https://code.google.com/p/google-gson/).
 
-## Acquire a user
+### Acquire a user
 Url: ```https://<configurable server url>/<api version>/user/signUp/```  
 Example: ```https://example.com/1/user/signUp/```
 
@@ -40,7 +40,7 @@ Hashing is done by:
 This hash is further called the ```secret```.  
 
 
-## Upload data 
+### Upload data 
 Uploading data is done by signed REST PUT requests:
 
 * Url: ```https://<configurable server url>/<api version>/data/<userId>/<timestamp>/<signature>/```
@@ -56,7 +56,7 @@ The signature is used to validate the upload and is computed by
 * convert the hash into hex format
 
 
-# History:
+## History:
 * v2.0.4: Progressbar moved to Notifications (fixed #1)
 * v2.0.3: Issue fixed #4 (DB handling)
 * v2.0.2: Issue fixed #5 (hopefully), suppressed spell check in several input fields, Issue fixed #6 
@@ -66,5 +66,5 @@ The signature is used to validate the upload and is computed by
 * v1:     Hello World!
 
 
-# License
+## License
 The app is licensed under the Apache 2.0 License.
