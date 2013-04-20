@@ -105,7 +105,6 @@ public class Rest {
         StringEntity entity = new StringEntity(jsonPayload);
         entity.setContentType(jsonHeader);
         HttpPut httpPut = new HttpPut(url);
-//        httpPut.setHeader(jsonHeader);
         httpPut.setEntity(entity);
         HttpResponse response = new DefaultHttpClient().execute(httpPut);
         
