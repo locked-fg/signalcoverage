@@ -61,7 +61,7 @@ public class CellMapperMain extends SherlockActivity {
 
             @Override
             public void onClick(View arg0) {
-                stopService();
+                stopLoggerService();
             }
         });
 
@@ -94,14 +94,14 @@ public class CellMapperMain extends SherlockActivity {
     public void onDestroy() {
         super.onDestroy();
         Log.i(LOG_TAG, "destroy activity");
-        stopService();
+        stopLoggerService();
         stopUiUpdates();
         db.close();
     }
 
-    private void stopService() {
-        Log.i(LOG_TAG, "stopping service");
-        stopService(new Intent(this, DbLoggerService.class));
+    private void stopLoggerService() {
+        boolean success =stopService(new Intent(this, DbLoggerService.class));
+        Log.i(LOG_TAG, "stopping service succeeded: "+success);
     }
 
     private void ensureServiceStarted() {
