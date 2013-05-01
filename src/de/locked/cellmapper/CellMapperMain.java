@@ -100,7 +100,7 @@ public class CellMapperMain extends SherlockActivity {
     }
 
     private void stopLoggerService() {
-        boolean success =stopService(new Intent(this, DbLoggerService.class));
+        boolean success = stopService(new Intent(this, DbLoggerService.class));
         Log.i(LOG_TAG, "stopping service succeeded: "+success);
     }
 
