@@ -131,7 +131,10 @@ public class DbLoggerService extends Service {
                         final long stopPeriod = System.currentTimeMillis() + updateDuration;
                         while (System.currentTimeMillis() < stopPeriod) {
                             Log.d(LOG_TAG, "request location update");
-                            dataListener.onLocationChanged(getLocation());
+                            Location location = getLocation();
+                            if (location != null){
+                                dataListener.onLocationChanged(location);
+                            }
                             sleep(minLocationTime);
                         }
 
@@ -163,7 +166,9 @@ public class DbLoggerService extends Service {
         if (lastLocation == null) return true;
         if (minLocationDistance <= 0) return true;
         
-        return l.distanceTo(lastLocation) > minLocationDistance;
+        float dist = l.distanceTo(lastLocation);
+        Log.d(LOG_TAG, "distance: "+dist+" / min dist: "+minLocationDistance);
+        return dist > minLocationDistance;
     }
     
     private Location getLocation() {
@@ -180,9 +185,7 @@ public class DbLoggerService extends Service {
 
         // get more accurate location (mind the nulls) 
         Location location = null;
-        if (gps == null && network == null) {
-            return null;
-        } else if (gps == null && network != null) {
+        if (gps == null && network != null) {
             location = network;
         } else if (gps != null && network == null){
             location = gps;
@@ -190,7 +193,9 @@ public class DbLoggerService extends Service {
             location = gps.getAccuracy() < network.getAccuracy() ? gps : network;
         }
         
-        lastLocation = location;
+        if (location != null){
+            lastLocation = location;
+        }
         return location;
     }
 

@@ -57,15 +57,15 @@ public class DataListener extends PhoneStateListener implements LocationListener
     @Override
     public void onLocationChanged(Location location) {
         if (location == null) {
-            Log.i(LOG_TAG, "null location received, ignoring");
+            Log.i(LOG_TAG, "null location received, ignore.");
             return;
         }
         if (Utils.isAirplaneModeOn(context)) {
-            Log.i(LOG_TAG, "we are in airplane mode, ignore");
+            Log.i(LOG_TAG, "we are in airplane mode, ignore.");
             return;
         }
 
-        Log.i(LOG_TAG, "location update received");
+        Log.d(LOG_TAG, "location update received");
 //        {
 //            
 //            // http://stackoverflow.com/questions/5499217/how-to-recognize-that-cyanogenmod-is-on-a-board/9801191
