@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.IBinder;
 import android.os.Looper;
@@ -38,8 +39,6 @@ public class DbLoggerService extends Service {
     private DataListener dataListener;
     private Thread runner;
 
-    private Location lastLocation = null;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -50,22 +49,18 @@ public class DbLoggerService extends Service {
         dataListener = new DataListener(this);
 
         // restart on preference change
-        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(
-                new OnSharedPreferenceChangeListener() {
-                    @Override
-                    public void onSharedPreferenceChanged(SharedPreferences p, String key) {
-                        if (isRunning()){
-                            restart();
-                        }
-                    }
-                });
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences p, String key) {
+                restart();
+            }
+        });
 
         restart();
     }
 
     /**
-     * We want this service to continue running until it is explicitly stopped,
-     * so return sticky.
+     * We want this service to continue running until it is explicitly stopped, so return sticky.
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -79,10 +74,6 @@ public class DbLoggerService extends Service {
         stop();
     }
 
-    private boolean isRunning(){
-        return runner != null && runner.isAlive();
-    }
-    
     private void stop() {
         removeListener();
         if (runner != null) {
@@ -121,82 +112,24 @@ public class DbLoggerService extends Service {
                 setName("LoggerServiceThread");
                 try {
                     Looper.prepare();
-                    // Looper.loop();
                     while (!isInterrupted()) {
                         Log.i(LOG_TAG, "start location listening");
                         addListener();
+                        sleep(updateDuration);
 
-                        // request location updates for a period of
-                        // 'updateDuration'ms
-                        final long stopPeriod = System.currentTimeMillis() + updateDuration;
-                        while (System.currentTimeMillis() < stopPeriod) {
-                            Log.d(LOG_TAG, "request location update");
-                            Location location = getLocation();
-                            if (location != null){
-                                dataListener.onLocationChanged(location);
-                            }
-                            sleep(minLocationTime);
-                        }
-
-                        // set asleep and wait for the next measurement period
                         Log.d(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
                         removeListener();
                         sleep(sleepBetweenMeasures);
                     }
+                    Looper.loop();
+                    Looper.myLooper().quit();
                 } catch (InterruptedException e) {
                     Log.i(LOG_TAG, "location thread interrupted");
                     removeListener();
-                } finally {
-                    Looper.myLooper().quit();
                 }
             }
         };
         runner.start();
-    }
-
-    private boolean timeOk(Location l){
-        if (l == null) return false;
-        
-        long limit = System.currentTimeMillis() - maxLocationAge;
-        return l.getTime() > limit;
-    }
-    
-    private boolean distOk(Location l){
-        if (l == null) return false;
-        if (lastLocation == null) return true;
-        if (minLocationDistance <= 0) return true;
-        
-        float dist = l.distanceTo(lastLocation);
-        Log.d(LOG_TAG, "distance: "+dist+" / min dist: "+minLocationDistance);
-        return dist > minLocationDistance;
-    }
-    
-    private Location getLocation() {
-        Location network = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        Location gps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-        // filter too old / near locations
-        if (!timeOk(network) || !distOk(network)) {
-            network = null;
-        }
-        if (!timeOk(gps) || !distOk(gps)) {
-            gps = null;
-        }
-
-        // get more accurate location (mind the nulls) 
-        Location location = null;
-        if (gps == null && network != null) {
-            location = network;
-        } else if (gps != null && network == null){
-            location = gps;
-        } else if (gps != null && network != null){
-            location = gps.getAccuracy() < network.getAccuracy() ? gps : network;
-        }
-        
-        if (location != null){
-            lastLocation = location;
-        }
-        return location;
     }
 
     /**
@@ -204,22 +137,8 @@ public class DbLoggerService extends Service {
      */
     private void addListener() {
         Log.i(LOG_TAG, "add listeners");
-        removeListener();
-
-        // initPhoneState listener
-        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS
-                | PhoneStateListener.LISTEN_CELL_LOCATION | PhoneStateListener.LISTEN_DATA_CONNECTION_STATE
-                | PhoneStateListener.LISTEN_SERVICE_STATE);
-
-        // init location listeners
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance,
-                dataListener);
-        try {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minLocationTime,
-                    minLocationDistance, dataListener);
-        } catch (IllegalArgumentException iae) {
-            Log.w(LOG_TAG, "Network provider is unavailable?! This seems to be an issue with the emulator", iae);
-        }
+        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
     }
 
     private void removeListener() {

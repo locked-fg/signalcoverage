@@ -65,7 +65,6 @@ public class DataListener extends PhoneStateListener implements LocationListener
             return;
         }
 
-        Log.d(LOG_TAG, "location update received");
 //        {
 //            
 //            // http://stackoverflow.com/questions/5499217/how-to-recognize-that-cyanogenmod-is-on-a-board/9801191
