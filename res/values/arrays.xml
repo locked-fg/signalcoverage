@@ -4,8 +4,18 @@
     <string-array name="updateInterval">
         <item>30 s</item>
         <item>1 min</item>
+        <item>2 min</item>
+        <item>3 min</item>
+        <item>4 min</item>
         <item>5 min</item>
+        <item>6 min</item>
+        <item>7 min</item>
+        <item>8 min</item>
+        <item>9 min</item>
+        <item>10 min</item>
         <item>15 min</item>
+        <item>20 min</item>
+        <item>25 min</item>
         <item>30 min</item>
         <item>45 min</item>
         <item>1 std</item>
@@ -13,33 +23,60 @@
     <string-array name="updateIntervalValues">
         <item>30</item>
         <item>60</item>
+        <item>120</item>
+        <item>180</item>
+        <item>240</item>
         <item>300</item>
+        <item>360</item>
+        <item>420</item>
+        <item>480</item>
+        <item>540</item>
+        <item>600</item>
         <item>900</item>
+        <item>1200</item>
+        <item>1500</item>
         <item>1800</item>
         <item>2700</item>
         <item>3600</item>
     </string-array>
-    
     <string-array name="minLocationTimeEntries">
         <item>1 sec</item>
+        <item>2 sec</item>
+        <item>3 sec</item>
+        <item>4 sec</item>
         <item>5 sec</item>
+        <item>10 sec</item>
         <item>15 sec</item>
         <item>30 sec</item>
+        <item>45 sec</item>
         <item>1 min</item>
+        <item>2 min</item>
+        <item>3 min</item>
+        <item>4 min</item>
         <item>5 min</item>
         <item>15 min</item>
         <item>30 min</item>
-    </string-array>
+        <item>60 min</item>
+        </string-array>
     <string-array name="minLocationTimeValues">
         <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
         <item>5</item>
+        <item>10</item>
         <item>15</item>
         <item>30</item>
+        <item>45</item>
         <item>60</item>
+        <item>120</item>
+        <item>180</item>
+        <item>240</item>
         <item>300</item>
         <item>900</item>
+        <item>1800</item>
+        <item>3600</item>
     </string-array>
-    
     <string-array name="minLocationDistEntries">
         <item>Off</item>
         <item>5 m</item>
@@ -48,7 +85,7 @@
         <item>250 m</item>
         <item>500 m</item>
         <item>1 km</item>
-        </string-array>
+    </string-array>
     <string-array name="minLocationDistValues">
         <item>-1</item>
         <item>5</item>
@@ -58,7 +95,6 @@
         <item>500</item>
         <item>1000</item>
     </string-array>
-
     <string-array name="sleepBetweenLocationEntries">
         <item>1 sec</item>
         <item>5 sec</item>
@@ -69,6 +105,7 @@
         <item>15 min</item>
         <item>30 min</item>
         <item>1 h</item>
+        <item>2 h</item>
         </string-array>
     <string-array name="sleepBetweenLocationValues">
         <item>1</item>
@@ -80,5 +117,7 @@
         <item>900</item>
         <item>1800</item>
         <item>3600</item>
+        <item>7200</item>
         </string-array>
+
 </resources>

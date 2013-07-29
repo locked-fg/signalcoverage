@@ -9,8 +9,8 @@ import android.preference.PreferenceScreen;
 import android.util.Log;
 import de.locked.cellmapper.model.Preferences;
 
-public class ConfigActivity extends PreferenceActivity {
-    private static final String LOG_TAG = ConfigActivity.class.getName();
+public class MyPreferenceActivity extends PreferenceActivity {
+    private static final String LOG_TAG = MyPreferenceActivity.class.getName();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -28,7 +28,7 @@ public class ConfigActivity extends PreferenceActivity {
             Log.d(LOG_TAG, "no int login - leave all as is");
         }
 
-        addPreferencesFromResource(R.xml.config);
+        addPreferencesFromResource(R.xml.preferences);
     }
 
     @Override

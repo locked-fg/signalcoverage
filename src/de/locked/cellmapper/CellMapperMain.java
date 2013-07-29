@@ -46,7 +46,7 @@ public class CellMapperMain extends SherlockActivity {
         setContentView(R.layout.activity_main);
 
         // set defaults
-        PreferenceManager.setDefaultValues(this, R.xml.config, false);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         db = DbHandler.get(this);
         
 
@@ -197,7 +197,7 @@ public class CellMapperMain extends SherlockActivity {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_settings:
-                startActivity(new Intent(this, ConfigActivity.class));
+                startActivity(new Intent(this, MyPreferenceActivity.class));
                 return true;
 
             case R.id.menu_upload:
@@ -279,7 +279,7 @@ public class CellMapperMain extends SherlockActivity {
             @Override
             public void onClick(DialogInterface dialog, int id) {
                 dialog.dismiss();
-                startActivity(new Intent(context, ConfigActivity.class));
+                startActivity(new Intent(context, MyPreferenceActivity.class));
             }
         });
     }

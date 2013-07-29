@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.IBinder;
 import android.os.Looper;
@@ -15,14 +13,11 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import de.locked.cellmapper.model.DataListener;
-import de.locked.cellmapper.model.DbHandler;
 import de.locked.cellmapper.model.Preferences;
 
 public class DbLoggerService extends Service {
     private static final String LOG_TAG = DbLoggerService.class.getName();
 
-    // max location age
-    private final long maxLocationAge = DbHandler.ALLOWED_TIME_DRIFT;
     // get an update every this many meters (min distance)
     private long minLocationDistance = 50; // m
     // get an update every this many milliseconds
