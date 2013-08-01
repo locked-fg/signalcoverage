@@ -22,7 +22,6 @@ public class DbHandler extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
 
     private static DbHandler instance = null;
-    private final Context context;
     private int writecount = 0;
 
     public synchronized static DbHandler get(Context context) {
@@ -34,7 +33,6 @@ public class DbHandler extends SQLiteOpenHelper {
 
     private DbHandler(Context context) {
         super(context, DB_NAME, null, DATABASE_VERSION);
-        this.context = context;
     }
 
     public String getLastEntryString() {
@@ -51,24 +49,8 @@ public class DbHandler extends SQLiteOpenHelper {
     }
 
     public void save(Data data) {
-        if (data.location == null || data.signal == null) {
-            return;
-        }
-        // don't save in airplane mode - we won't have signal anyways
-        if (Utils.isAirplaneModeOn(context)) {
-            return;
-        }
-
-        long time = data.location.getTime();
         int timeSec = (int) (data.location.getTime() / 1000);
         String carrier = data.carrier == null ? "" : data.carrier;
-
-        // strange: I logged updates for timestamps ~12h ago right after a
-        // regular timestamp
-        if (Math.abs(time - System.currentTimeMillis()) > ALLOWED_TIME_DRIFT) {
-            Log.i(LOG_TAG, "out of date location ignored: " + sdf.format(new Date(time)));
-            return;
-        }
 
         // /data/data/de.locked.cellmapper/databases/CellMapper
         // sqlite> select datetime(time, 'unixepoch', 'localtime') FROM Base
@@ -76,7 +58,7 @@ public class DbHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         try {
             db.beginTransaction();
-            Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(time)));
+            Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(timeSec*1000L)));
 
             ContentValues values = new ContentValues();
             values.put("time", timeSec);
@@ -86,9 +68,6 @@ public class DbHandler extends SQLiteOpenHelper {
             values.put("latitude", data.location.getLatitude());
             values.put("longitude", data.location.getLongitude());
             values.put("speed", data.location.getSpeed());
-            values.put("cdmaDbm", data.signal.getCdmaDbm());
-            values.put("evdoDbm", data.signal.getEvdoDbm());
-            values.put("evdoSnr", data.signal.getEvdoSnr());
             values.put("signalStrength", data.signal.getGsmSignalStrength());
             values.put("carrier", carrier);
             long success = db.replace(TABLE, null, values);

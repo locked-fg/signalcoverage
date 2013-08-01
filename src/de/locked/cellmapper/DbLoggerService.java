@@ -6,8 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.location.LocationManager;
+import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -17,6 +18,8 @@ import de.locked.cellmapper.model.Preferences;
 
 public class DbLoggerService extends Service {
     private static final String LOG_TAG = DbLoggerService.class.getName();
+    private final static int START_LISTENING = 0;
+    private final static int STOP_LISTENING = 1;
 
     // get an update every this many meters (min distance)
     private long minLocationDistance = 50; // m
@@ -31,8 +34,9 @@ public class DbLoggerService extends Service {
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
 
+    private boolean reschedule;
     private DataListener dataListener;
-    private Thread runner;
+    private Handler handler;
 
     @Override
     public void onCreate() {
@@ -42,16 +46,47 @@ public class DbLoggerService extends Service {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         dataListener = new DataListener(this);
+        reschedule = true;
 
         // restart on preference change
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences p, String key) {
-                restart();
+                loadPreferences();
             }
         });
 
-        restart();
+        handler = new Handler() {
+
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case START_LISTENING:
+                        Log.d(LOG_TAG, "started");
+                        addListener();
+                        handler.sendEmptyMessageDelayed(STOP_LISTENING, updateDuration);
+                        break;
+
+                    case STOP_LISTENING:
+                        Log.d(LOG_TAG, "stopped");
+                        removeListener();
+                        if (reschedule) {
+                            Log.d(LOG_TAG, "rescheduled");
+                            handler.sendEmptyMessageDelayed(START_LISTENING, sleepBetweenMeasures);
+                        }
+                        break;
+
+                    default:
+                        Log.e(LOG_TAG, "this was unexpected!");
+                        removeListener();
+                        break;
+                }
+            }
+
+        };
+
+        handler.sendEmptyMessage(START_LISTENING);
     }
 
     /**
@@ -66,15 +101,8 @@ public class DbLoggerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stop();
-    }
-
-    private void stop() {
-        removeListener();
-        if (runner != null) {
-            runner.interrupt();
-        }
-        runner = null;
+        this.reschedule = false;
+        handler.sendEmptyMessage(STOP_LISTENING);
     }
 
     @Override
@@ -95,45 +123,11 @@ public class DbLoggerService extends Service {
         minLocationTime = Math.max(minLocationTime, 1000);
     }
 
-    private synchronized void restart() {
-        stop();
-        loadPreferences();
-
-        // this is the main thread
-        runner = new Thread() {
-
-            @Override
-            public void run() {
-                setName("LoggerServiceThread");
-                try {
-                    Looper.prepare();
-                    while (!isInterrupted()) {
-                        Log.i(LOG_TAG, "start location listening");
-                        addListener();
-                        sleep(updateDuration);
-
-                        Log.d(LOG_TAG, "wait for next iteration in " + sleepBetweenMeasures + "ms and disable updates");
-                        removeListener();
-                        sleep(sleepBetweenMeasures);
-                    }
-                    Looper.loop();
-                    Looper.myLooper().quit();
-                } catch (InterruptedException e) {
-                    Log.i(LOG_TAG, "location thread interrupted");
-                    removeListener();
-                }
-            }
-        };
-        runner.start();
-    }
-
-    /**
-     * Listen updates on location and signal provider
-     */
     private void addListener() {
-        Log.i(LOG_TAG, "add listeners");
+        Log.i(LOG_TAG, "add listeners. minTime: " + minLocationTime + " / min dist: " + minLocationDistance);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, minLocationTime, minLocationDistance, dataListener);
     }
 
     private void removeListener() {
