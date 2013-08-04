@@ -58,9 +58,6 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 data.latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
                 data.longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
                 data.speed = cursor.getDouble(cursor.getColumnIndex("speed"));
-                data.cdmaDbm = cursor.getInt(cursor.getColumnIndex("cdmaDbm"));
-                data.evdoDbm = cursor.getInt(cursor.getColumnIndex("evdoDbm"));
-                data.evdoSnr = cursor.getInt(cursor.getColumnIndex("evdoSnr"));
                 data.signalStrength = cursor.getInt(cursor.getColumnIndex("signalStrength"));
                 data.carrier = cursor.getString(cursor.getColumnIndex("carrier"));
 

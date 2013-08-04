@@ -13,13 +13,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 public class DbHandler extends SQLiteOpenHelper {
-    public static final int ALLOWED_TIME_DRIFT = 15000; // ms
     public static final String LOG_TAG = DbHandler.class.getName();
     public static final String DB_NAME = "CellMapper";
     public static final String TABLE = "Base";
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("y-MM-dd HH:mm:ss", Locale.US);
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 4;
 
     private static DbHandler instance = null;
     private int writecount = 0;
@@ -37,8 +36,7 @@ public class DbHandler extends SQLiteOpenHelper {
 
     public String getLastEntryString() {
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT datetime(time, 'unixepoch', 'localtime') AS LastEntry FROM " + TABLE
-                + " ORDER BY time DESC LIMIT 1", null);
+        Cursor cursor = db.rawQuery("SELECT datetime(time, 'unixepoch', 'localtime') AS LastEntry FROM " + TABLE + " ORDER BY time DESC LIMIT 1", null);
 
         String result = "";
         if (cursor.moveToFirst()) {
@@ -58,7 +56,7 @@ public class DbHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         try {
             db.beginTransaction();
-            Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(timeSec*1000L)));
+            Log.i(LOG_TAG, "writing data to db (location+signal) at time " + sdf.format(new Date(timeSec * 1000L)));
 
             ContentValues values = new ContentValues();
             values.put("time", timeSec);
@@ -79,8 +77,8 @@ public class DbHandler extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
-        
-        if (writecount++ % 100 == 0){
+
+        if (writecount++ % 100 == 0) {
             SQLiteDatabase.releaseMemory();
         }
     }
@@ -131,9 +129,6 @@ public class DbHandler extends SQLiteOpenHelper {
                 " longitude REAL," + //
                 " speed REAL, " + //
                 // signal
-                " cdmaDbm INT, " + //
-                " evdoDbm INT, " + //
-                " evdoSnr INT, " + //
                 " signalStrength INT, " + //
                 " carrier TEXT " + //
                 " );");
@@ -148,6 +143,32 @@ public class DbHandler extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.i(LOG_TAG, "Upgrade from " + oldVersion + " to " + newVersion);
+        switch (oldVersion) {
+            case 1: 
+            case 2:
+            case 3:
+                // remove cdmaDbm, evdoDbm, evdoSnr
+                String cols = "time, accuracy, altitude, satellites, latitude, longitude, speed, signalStrength, carrier";
+                keep(db, cols);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void keep(SQLiteDatabase db, String cols) {
+        db.beginTransaction();
+        try {
+            db.execSQL("CREATE TEMPORARY TABLE t1_backup(" + cols + ") ");
+            db.execSQL("INSERT INTO t1_backup SELECT " + cols + " FROM " + TABLE);
+            db.execSQL("DROP TABLE " + TABLE);
+            db.execSQL("CREATE TABLE " + TABLE + "(" + cols + ")");
+            db.execSQL("INSERT INTO " + TABLE + " SELECT " + cols + " FROM t1_backup");
+            db.execSQL("DROP TABLE t1_backup");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     @Override

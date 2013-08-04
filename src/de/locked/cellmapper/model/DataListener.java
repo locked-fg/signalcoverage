@@ -17,6 +17,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class DataListener extends PhoneStateListener implements LocationListener {
     public static final String LOG_TAG = DataListener.class.getName();
@@ -72,9 +73,11 @@ public class DataListener extends PhoneStateListener implements LocationListener
             Log.i(LOG_TAG, "we are in airplane mode, ignore.");
             return;
         }
+        
+        long age = Math.abs(location.getTime() - System.currentTimeMillis()) / 1000;
         // strange: I logged updates for timestamps ~12h ago right after a
         // regular timestamp
-        if (Math.abs(location.getTime() - System.currentTimeMillis()) > 3600 * 1000) {
+        if (age > 3600 * 1000) {
             Log.i(LOG_TAG, "out of date location ignored: " + sdf.format(new Date(location.getTime())));
             return;
         }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.location.Location;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.os.IBinder;
@@ -34,9 +35,10 @@ public class DbLoggerService extends Service {
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
 
-    private boolean reschedule;
+    private volatile boolean reschedule;
     private DataListener dataListener;
     private Handler handler;
+    private Thread thread;
 
     @Override
     public void onCreate() {
@@ -63,30 +65,79 @@ public class DbLoggerService extends Service {
                 super.handleMessage(msg);
                 switch (msg.what) {
                     case START_LISTENING:
-                        Log.d(LOG_TAG, "started");
-                        addListener();
-                        handler.sendEmptyMessageDelayed(STOP_LISTENING, updateDuration);
+                        startListening();
                         break;
 
                     case STOP_LISTENING:
-                        Log.d(LOG_TAG, "stopped");
-                        removeListener();
-                        if (reschedule) {
-                            Log.d(LOG_TAG, "rescheduled");
-                            handler.sendEmptyMessageDelayed(START_LISTENING, sleepBetweenMeasures);
-                        }
+                        stopListening();
                         break;
 
                     default:
                         Log.e(LOG_TAG, "this was unexpected!");
-                        removeListener();
+                        stopListening();
                         break;
                 }
             }
 
         };
+    }
 
-        handler.sendEmptyMessage(START_LISTENING);
+    private void stopListening() {
+        Log.d(LOG_TAG, "stopping");
+        removeListener();
+        if (thread != null) {
+            thread.interrupt();
+            thread = null;
+        }
+        if (reschedule) {
+            Log.d(LOG_TAG, "rescheduled");
+            handler.sendEmptyMessageDelayed(START_LISTENING, sleepBetweenMeasures);
+        }
+    }
+
+    private void startListening() {
+        Log.d(LOG_TAG, "starting");
+        addListener();
+        handler.sendEmptyMessageDelayed(STOP_LISTENING, updateDuration);
+
+        thread = new Thread() {
+            private final long maxAge = 5 * 60 * 1000; // 5min
+
+            @Override
+            public void run() {
+                if (minLocationTime <= 0) {
+                    return;
+                }
+                Location last = null;
+                while (!isInterrupted() && reschedule) {
+                    Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    if (location != null) {
+                        long age = System.currentTimeMillis() - location.getTime();
+                        float dist = dist(last, location);
+                        Log.d(LOG_TAG, "location age (s): " + (age/1000) + " // dist: " + dist);
+                        if (age < maxAge && dist > minLocationDistance) {
+                            dataListener.onLocationChanged(location);
+                            last = location;
+                        }
+                    }
+                    try {
+                        sleep(minLocationTime);
+                    } catch (InterruptedException e) {
+                        Log.i(LOG_TAG, "thread interrruped");
+                        return;
+                    }
+                }
+            }
+
+            private float dist(Location a, Location b) {
+                if (a == null || b == null) {
+                    return Float.MAX_VALUE;
+                } else {
+                    return a.distanceTo(b);
+                }
+            }
+        };
+        thread.start();
     }
 
     /**
@@ -94,13 +145,13 @@ public class DbLoggerService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("LocalService", "Received start id " + startId + ": " + intent);
+        this.reschedule = true;
+        handler.sendEmptyMessage(START_LISTENING);
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         this.reschedule = false;
         handler.sendEmptyMessage(STOP_LISTENING);
     }
@@ -127,6 +178,7 @@ public class DbLoggerService extends Service {
         Log.i(LOG_TAG, "add listeners. minTime: " + minLocationTime + " / min dist: " + minLocationDistance);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
+        // locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
         locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, minLocationTime, minLocationDistance, dataListener);
     }
 
