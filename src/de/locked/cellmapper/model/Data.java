@@ -8,11 +8,13 @@ public class Data {
     public final SignalStrength signal;
     public final int satellites;
     public final String carrier;
+    public final String androidRelease;
 
-    public Data(Location location, SignalStrength signal, int satellites, String carrier) {
+    public Data(Location location, SignalStrength signal, int satellites, String carrier, String androidRelease) {
         this.location = location;
         this.signal = signal;
         this.satellites = satellites;
         this.carrier = carrier;
+        this.androidRelease = androidRelease;
     }
 }

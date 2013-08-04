@@ -18,7 +18,7 @@ public class DbHandler extends SQLiteOpenHelper {
     public static final String TABLE = "Base";
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("y-MM-dd HH:mm:ss", Locale.US);
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
     private static DbHandler instance = null;
     private int writecount = 0;
@@ -68,6 +68,7 @@ public class DbHandler extends SQLiteOpenHelper {
             values.put("speed", data.location.getSpeed());
             values.put("signalStrength", data.signal.getGsmSignalStrength());
             values.put("carrier", carrier);
+            values.put("androidrelease", data.androidRelease);
             long success = db.replace(TABLE, null, values);
 
             Log.i(LOG_TAG, "transaction successfull: " + success);
@@ -130,7 +131,8 @@ public class DbHandler extends SQLiteOpenHelper {
                 " speed REAL, " + //
                 // signal
                 " signalStrength INT, " + //
-                " carrier TEXT " + //
+                " carrier TEXT, " + //
+                " androidRelease TEXT " + //
                 " );");
     }
 
@@ -144,25 +146,39 @@ public class DbHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.i(LOG_TAG, "Upgrade from " + oldVersion + " to " + newVersion);
         switch (oldVersion) {
-            case 1: 
+            case 1:
             case 2:
             case 3:
                 // remove cdmaDbm, evdoDbm, evdoSnr
                 String cols = "time, accuracy, altitude, satellites, latitude, longitude, speed, signalStrength, carrier";
                 keep(db, cols);
-                break;
+            case 4:
+                // add androidRelease
+                addColumn(db, "androidRelease");
             default:
                 break;
         }
     }
 
+    private void addColumn(SQLiteDatabase db, String colname) {
+        Log.d(LOG_TAG, "add column "+colname);
+        db.beginTransaction();
+        try {
+            db.execSQL("ALTER TABLE " + TABLE + " ADD COLUMN " + colname + " TEXT");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     private void keep(SQLiteDatabase db, String cols) {
+        Log.d(LOG_TAG, "delete all but those columns "+cols);
         db.beginTransaction();
         try {
             db.execSQL("CREATE TEMPORARY TABLE t1_backup(" + cols + ") ");
             db.execSQL("INSERT INTO t1_backup SELECT " + cols + " FROM " + TABLE);
             db.execSQL("DROP TABLE " + TABLE);
-            db.execSQL("CREATE TABLE " + TABLE + "(" + cols + ")");
+            db.execSQL("CREATE TABLE " + TABLE + "(" + cols + "), PRIMARY KEY (time)");
             db.execSQL("INSERT INTO " + TABLE + " SELECT " + cols + " FROM t1_backup");
             db.execSQL("DROP TABLE t1_backup");
             db.setTransactionSuccessful();

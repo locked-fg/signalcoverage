@@ -15,8 +15,8 @@ import android.util.Base64;
 import android.util.Log;
 import de.locked.cellmapper.R;
 import de.locked.cellmapper.model.Preferences;
-import de.locked.cellmapper.share.v1.Data;
-import de.locked.cellmapper.share.v1.User;
+import de.locked.signalcoverage.share.v2.ApiData;
+import de.locked.signalcoverage.share.v2.ApiUser;
 
 public class UrlExporter extends AbstractAsyncExporterTask {
     private static final String LOG_TAG = UrlExporter.class.getName();
@@ -40,16 +40,16 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         }
 
         try {
-            User user = getUser();
+            ApiUser user = getUser();
             if (user == null) {
                 return null;
             }
 
             // build the data list
             int i = 0;
-            Collection<Data> dataList = new ArrayList<Data>(chunksize);
+            Collection<ApiData> dataList = new ArrayList<ApiData>(chunksize);
             while (cursor.moveToNext() && !isCancelled()) {
-                Data data = new Data();
+                ApiData data = new ApiData();
                 // data.userId = userId;
                 data.time = cursor.getInt(cursor.getColumnIndex("time"));
                 data.accuracy = cursor.getDouble(cursor.getColumnIndex("accuracy"));
@@ -60,6 +60,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 data.speed = cursor.getDouble(cursor.getColumnIndex("speed"));
                 data.signalStrength = cursor.getInt(cursor.getColumnIndex("signalStrength"));
                 data.carrier = cursor.getString(cursor.getColumnIndex("carrier"));
+                data.androidRelease = cursor.getString(cursor.getColumnIndex("androidRelease"));
 
                 dataList.add(data);
                 i++;
@@ -81,7 +82,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         return null;
     }
 
-    private void upload(User user, Collection<Data> dataList, int i) throws UnsupportedEncodingException,
+    private void upload(ApiUser user, Collection<ApiData> dataList, int i) throws UnsupportedEncodingException,
             ClientProtocolException, IOException {
         int statusCode = rest.putData(user, dataList);
         dataList.clear();
@@ -93,9 +94,9 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         }
     }
 
-    private User getUser() throws IOException {
+    private ApiUser getUser() throws IOException {
         Log.i(LOG_TAG, "getting user login");
-        User user = getUserFromPreference();
+        ApiUser user = getUserFromPreference();
 
         // we don't have a user right now, auto acquire?
         if (user == null) {
@@ -105,7 +106,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
             if (url != null) {
                 Log.i(LOG_TAG, "auto login allowed and url given");
 
-                User plainPassUser = rest.signUp();
+                ApiUser plainPassUser = rest.signUp();
                 if (plainPassUser == null) { // no response
                     String message = "The server did not respond properly. We did not get a username.";
                     Log.w(LOG_TAG, message);
@@ -126,7 +127,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         return user;
     }
 
-    private User getUserFromPreference() {
+    private ApiUser getUserFromPreference() {
         String loginString = preferences.getString(Preferences.login, "");
         String pass = preferences.getString(Preferences.password, "");
 
@@ -138,16 +139,16 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         }
 
         int login = Integer.parseInt(loginString);
-        User user = new User(login, pass);
+        ApiUser user = new ApiUser(login, pass);
         return encrypt(user);
     }
 
     // create the secret hash
-    private User encrypt(User user) {
+    private ApiUser encrypt(ApiUser user) {
         if (user == null) {
             throw new NullPointerException("user must not be null");
         }
-        String encrypted = Base64.encodeToString(User.makePass(user.userId, user.secret), Base64.DEFAULT);
-        return new User(user.userId, encrypted);
+        String encrypted = Base64.encodeToString(ApiUser.makePass(user.userId, user.secret), Base64.DEFAULT);
+        return new ApiUser(user.userId, encrypted);
     }
 }

@@ -12,6 +12,7 @@ import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
@@ -91,10 +92,6 @@ public class DataListener extends PhoneStateListener implements LocationListener
         // {
         //
         // // http://stackoverflow.com/questions/5499217/how-to-recognize-that-cyanogenmod-is-on-a-board/9801191
-        // // os stuff
-        // int sdkInt = Build.VERSION.SDK_INT; // API version
-        // String release = Build.VERSION.RELEASE; // android version like
-        // // 2.3.7
         //
         // // device stuff
         // String device = Build.DEVICE; // bravo
@@ -115,9 +112,11 @@ public class DataListener extends PhoneStateListener implements LocationListener
             return;
         }
 
+        // Build.VERSION.SDK_INT returns the API version. In a rooted phone, this might be null!
+        String androidRelease = Build.VERSION.RELEASE; // android version like 2.3.7
         String carrier = telephonyManager.getNetworkOperatorName();
         int satellites = countSatellites();
-        Data data = new Data(location, signal, satellites, carrier);
+        Data data = new Data(location, signal, satellites, carrier, androidRelease);
         db.save(data);
     }
 

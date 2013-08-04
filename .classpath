@@ -5,7 +5,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry exported="true" kind="lib" path="libs/gson-2.2.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/cellmapper-share-1.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="libs/signalcoverage-share-2.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="libs/commons-codec-1.8.jar"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

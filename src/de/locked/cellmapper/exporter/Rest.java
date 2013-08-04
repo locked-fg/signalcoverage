@@ -20,9 +20,9 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
-import de.locked.cellmapper.share.v1.Data;
-import de.locked.cellmapper.share.v1.Signer;
-import de.locked.cellmapper.share.v1.User;
+import de.locked.signalcoverage.share.v2.ApiData;
+import de.locked.signalcoverage.share.v2.ApiUser;
+import de.locked.signalcoverage.share.v2.Signer;
 
 /**
  * Wrapper for the Rest API
@@ -30,9 +30,9 @@ import de.locked.cellmapper.share.v1.User;
 public class Rest {
     private static final String LOG_TAG = Rest.class.getName();
 
-    private final String signupUrl = "/1/user/signUp/";
+    private final String signupUrl = "/2/user/signUp/";
     // userId, timestamp, signature
-    private final String uploadPattern = "/1/data/%s/%d/%s/";
+    private final String uploadPattern = "/2/data/%s/%d/%s/";
 
     private final String fullUploadURL;
     private final String fullSignupURL;
@@ -73,7 +73,7 @@ public class Rest {
         return url;
     }
 
-    public final User signUp() throws ClientProtocolException, IOException {
+    public final ApiUser signUp() throws ClientProtocolException, IOException {
         Log.d(LOG_TAG, "request signup from " + fullSignupURL);
 
         HttpResponse httpResponse = new DefaultHttpClient().execute(new HttpGet(fullSignupURL));
@@ -84,7 +84,7 @@ public class Rest {
         }
 
         String dataString = EntityUtils.toString(httpResponse.getEntity());
-        return new Gson().fromJson(dataString, User.class);
+        return new Gson().fromJson(dataString, ApiUser.class);
     }
 
     /**
@@ -94,7 +94,7 @@ public class Rest {
      * @return status code
      * @throws IOException
      */
-    public final int putData(User user, Collection<Data> dataList) throws IOException {
+    public final int putData(ApiUser user, Collection<ApiData> dataList) throws IOException {
         int timestamp = (int) (Calendar.getInstance().getTimeInMillis() / 1000);
         String signature = new Signer().createSignature(user.userId, user.secret, timestamp, dataList);
         String url = String.format(Locale.US, fullUploadURL, //
