@@ -74,10 +74,10 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 data.signalStrength = getInt("signalStrength");
                 data.carrier = getString("carrier");
                 data.androidRelease = getString("androidRelease");
-                String s1 = getString("manufacturer");
-                String s2 = getString("model");
-                String s3 = getString("device");
-                String s4 = getString("osVersion");
+                data.manufacturer = getString("manufacturer");
+                data.model = getString("model");
+                data.device = getString("device");
+                data.osVersion = getString("osVersion");
                 
                 dataList.add(data);
                 i++;
