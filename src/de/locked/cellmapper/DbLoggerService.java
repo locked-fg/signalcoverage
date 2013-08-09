@@ -180,11 +180,13 @@ public class DbLoggerService extends Service {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
         // locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
         locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, minLocationTime, minLocationDistance, dataListener);
+        locationManager.addGpsStatusListener(dataListener);
     }
 
     private void removeListener() {
         Log.i(LOG_TAG, "remove listeners");
         locationManager.removeUpdates(dataListener);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
+        locationManager.removeGpsStatusListener(dataListener);
     }
 }

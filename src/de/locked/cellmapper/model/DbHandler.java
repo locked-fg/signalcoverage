@@ -10,6 +10,8 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.location.Location;
+import android.telephony.SignalStrength;
 import android.util.Log;
 
 public class DbHandler extends SQLiteOpenHelper {
@@ -46,9 +48,11 @@ public class DbHandler extends SQLiteOpenHelper {
         return result;
     }
 
-    public void save(Data data) {
-        int timeSec = (int) (data.location.getTime() / 1000);
-        String carrier = data.carrier == null ? "" : data.carrier;
+	public void save(Location location, SignalStrength signal, int satellites,
+			String carrier, String androidRelease, 
+			String manufacturer, String model, String device, String osVersion) {
+        int timeSec = (int) (location.getTime() / 1000);
+        carrier = carrier == null ? "" : carrier;
 
         // /data/data/de.locked.cellmapper/databases/CellMapper
         // sqlite> select datetime(time, 'unixepoch', 'localtime') FROM Base
@@ -60,15 +64,19 @@ public class DbHandler extends SQLiteOpenHelper {
 
             ContentValues values = new ContentValues();
             values.put("time", timeSec);
-            values.put("accuracy", data.location.getAccuracy());
-            values.put("altitude", data.location.getAltitude());
-            values.put("satellites", data.satellites);
-            values.put("latitude", data.location.getLatitude());
-            values.put("longitude", data.location.getLongitude());
-            values.put("speed", data.location.getSpeed());
-            values.put("signalStrength", data.signal.getGsmSignalStrength());
+            values.put("accuracy", location.getAccuracy());
+            values.put("altitude", location.getAltitude());
+            values.put("satellites", satellites);
+            values.put("latitude", location.getLatitude());
+            values.put("longitude", location.getLongitude());
+            values.put("speed", location.getSpeed());
+            values.put("signalStrength", signal.getGsmSignalStrength());
             values.put("carrier", carrier);
-            values.put("androidrelease", data.androidRelease);
+            values.put("androidrelease", androidRelease);
+            values.put("manufacturer", manufacturer);
+            values.put("model", model);
+            values.put("device", device);
+            values.put("osVersion", osVersion);
             long success = db.replace(TABLE, null, values);
 
             Log.i(LOG_TAG, "transaction successfull: " + success);
@@ -82,7 +90,7 @@ public class DbHandler extends SQLiteOpenHelper {
         if (writecount++ % 100 == 0) {
             SQLiteDatabase.releaseMemory();
         }
-    }
+	}
 
     public String getLastRowAsString() {
         SQLiteDatabase db = getReadableDatabase();
@@ -132,7 +140,11 @@ public class DbHandler extends SQLiteOpenHelper {
                 // signal
                 " signalStrength INT, " + //
                 " carrier TEXT, " + //
-                " androidRelease TEXT " + //
+                " androidRelease TEXT, " + //
+                " manufacturer TEXT, " + //
+        		" model TEXT, " + //
+                " device TEXT, " + //
+                " osVersion TEXT " + //
                 " );");
     }
 
@@ -155,6 +167,13 @@ public class DbHandler extends SQLiteOpenHelper {
             case 4:
                 // add androidRelease
                 addColumn(db, "androidRelease");
+            case 5:
+            	// add model specific stuff
+                addColumn(db, "manufacturer");
+                addColumn(db, "model");
+                addColumn(db, "device");
+                addColumn(db, "osVersion");
+
             default:
                 break;
         }

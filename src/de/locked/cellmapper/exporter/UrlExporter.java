@@ -32,6 +32,19 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         rest = (baseURL != null) ? new Rest(baseURL) : null;
     }
 
+    private String getString(String col){
+    	return cursor.getString(cursor.getColumnIndex(col));
+    }
+    private int getInt(String col){
+    	return cursor.getInt(cursor.getColumnIndex(col));
+    }
+    private double getDouble(String col){
+    	return cursor.getDouble(cursor.getColumnIndex(col));
+    }
+    private float getFloat(String col){
+    	return cursor.getFloat(cursor.getColumnIndex(col));
+    }
+    
     @Override
     protected Void doInBackground(Void... params) {
         if (rest == null) {
@@ -51,17 +64,21 @@ public class UrlExporter extends AbstractAsyncExporterTask {
             while (cursor.moveToNext() && !isCancelled()) {
                 ApiData data = new ApiData();
                 // data.userId = userId;
-                data.time = cursor.getInt(cursor.getColumnIndex("time"));
-                data.accuracy = cursor.getDouble(cursor.getColumnIndex("accuracy"));
-                data.altitude = cursor.getFloat(cursor.getColumnIndex("altitude"));
-                data.satellites = cursor.getInt(cursor.getColumnIndex("satellites"));
-                data.latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
-                data.longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
-                data.speed = cursor.getDouble(cursor.getColumnIndex("speed"));
-                data.signalStrength = cursor.getInt(cursor.getColumnIndex("signalStrength"));
-                data.carrier = cursor.getString(cursor.getColumnIndex("carrier"));
-                data.androidRelease = cursor.getString(cursor.getColumnIndex("androidRelease"));
-
+                data.time = getInt("time");
+                data.accuracy = getDouble("accuracy");
+                data.altitude = getFloat("altitude");
+                data.satellites = getInt("satellites");
+                data.latitude = getDouble("latitude");
+                data.longitude = getDouble("longitude");
+                data.speed = getDouble("speed");
+                data.signalStrength = getInt("signalStrength");
+                data.carrier = getString("carrier");
+                data.androidRelease = getString("androidRelease");
+                String s1 = getString("manufacturer");
+                String s2 = getString("model");
+                String s3 = getString("device");
+                String s4 = getString("osVersion");
+                
                 dataList.add(data);
                 i++;
 
