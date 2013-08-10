@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<view
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    class="com.actionbarsherlock.internal.widget.ScrollingTabContainerView$TabView"
+    style="?attr/actionBarTabStyle"
+/><!-- From: file:/C:/Users/Franz/Documents/eclipseWorkspace/SignalCoverage-Pack/ActionBarSherlock-4.2.0/library/res/layout/abs__action_bar_tab.xml --><!-- From: file:/C:/Users/Franz/Documents/eclipseWorkspace/SignalCoverage-Pack/SignalCoverageApp/build/exploded-bundles/SignalCoveragePackActionBarSherlock420LibraryUnspecified.aar/res/layout/abs__action_bar_tab.xml -->

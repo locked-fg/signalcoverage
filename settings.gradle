@@ -1,0 +1,2 @@
+include ':SignalCoverageApp'
+include ':ActionBarSherlock-4.2.0:library'

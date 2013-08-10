@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_settings"
+        android:title="@string/menu_settings"
+        android:orderInCategory="100"
+        />
+      <item android:id="@+id/menu_upload"
+        android:title="@string/menu_upload"
+        android:orderInCategory="200"
+        />
+    <item android:id="@+id/menu_saveSD"
+        android:title="@string/menu_saveSD"
+        android:orderInCategory="200"
+        />
+</menu>
+<!-- From: file:/C:/Users/Franz/Documents/eclipseWorkspace/SignalCoverage-Pack/SignalCoverageApp/res/menu/activity_main.xml -->

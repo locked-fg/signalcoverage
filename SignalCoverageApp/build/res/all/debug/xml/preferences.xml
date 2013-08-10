@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orderingFromXml="true" >
+
+    <PreferenceCategory android:title="Location" >
+        <ListPreference
+            android:defaultValue="60"
+            android:entries="@array/updateInterval"
+            android:entryValues="@array/updateIntervalValues"
+            android:key="update_duration"
+            android:summary="Listen this long for updates until setting asleep."
+            android:title="Update Duration" />
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/sleepBetweenLocationEntries"
+            android:entryValues="@array/sleepBetweenLocationValues"
+            android:key="sleep_between_measures"
+            android:summary="Time between measurements (reduce power consumption)"
+            android:title="Sleep between updates" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Update frequency" >
+        <ListPreference
+            android:defaultValue="5"
+            android:entries="@array/minLocationTimeEntries"
+            android:entryValues="@array/minLocationTimeValues"
+            android:key="min_location_time"
+            android:summary="Minimum time between location updates."
+            android:title="Min time" />
+        <ListPreference
+            android:defaultValue="-1"
+            android:entries="@array/minLocationDistEntries"
+            android:entryValues="@array/minLocationDistValues"
+            android:key="min_location_dist"
+            android:summary="Minimum distance between location updates."
+            android:title="Min distance" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Upload Account" >
+        <EditTextPreference
+            android:defaultValue="https://signalcoverage-locked.rhcloud.com/rest/"
+            android:key="uploadUrl"
+            android:singleLine="true"
+            android:summary="The URL to which the data is uploaded."
+            android:title="Upload URL"
+            android:inputType="textNoSuggestions"
+             />
+        <EditTextPreference
+            android:key="login"
+            android:singleLine="true"
+            android:summary="The login for the upload service. Leave empty of auto signup."
+            android:title="Login"
+            android:inputType="textNoSuggestions"
+            />
+        <EditTextPreference
+            android:key="password"
+            android:password="true"
+            android:singleLine="true"
+            android:summary="The password for the upload service."
+            android:title="Password"
+            android:inputType="textNoSuggestions"
+             />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="licenseAgreed"
+            android:summaryOff="You have not (yet) agreed to the upload license. Uploading is disabled."
+            android:summaryOn="You agreed to the upload license. Uploading is enabled."
+            android:title="License agreed" />
+    </PreferenceCategory>
+
+</PreferenceScreen><!-- From: file:/C:/Users/Franz/Documents/eclipseWorkspace/SignalCoverage-Pack/SignalCoverageApp/res/xml/preferences.xml -->
