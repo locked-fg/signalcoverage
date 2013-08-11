@@ -54,6 +54,7 @@ public class CellMapperMain extends SherlockActivity {
 
             @Override
             public void onClick(View arg0) {
+                Log.d(LOG_TAG, "start click");
                 ensureServiceStarted();
             }
         });
@@ -61,6 +62,7 @@ public class CellMapperMain extends SherlockActivity {
 
             @Override
             public void onClick(View arg0) {
+                Log.d(LOG_TAG, "stop click");
                 stopLoggerService();
             }
         });
@@ -107,13 +109,14 @@ public class CellMapperMain extends SherlockActivity {
     private void ensureServiceStarted() {
         Log.d(LOG_TAG, "ensuring that the service is up");
         if (Utils.isServiceRunning(this, DbLoggerService.class)) {
+
             return;
         }
 
         // check if location check is allowed at all
         String locationProvidersAllowed = Secure.getString(getContentResolver(), Secure.LOCATION_PROVIDERS_ALLOWED);
         if (locationProvidersAllowed == null || locationProvidersAllowed.length() == 0) {
-            String msg = "Postitioning is completely disabled in your device. Please enable it.";
+            String msg = "Positioning is completely disabled in your device. Please enable it.";
             Log.i(LOG_TAG, msg);
             maybeShowGPSDisabledAlertToUser(msg);
             return;

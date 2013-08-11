@@ -20,7 +20,7 @@ public class DbHandler extends SQLiteOpenHelper {
     public static final String TABLE = "Base";
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("y-MM-dd HH:mm:ss", Locale.US);
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     private static DbHandler instance = null;
     private int writecount = 0;
@@ -168,6 +168,7 @@ public class DbHandler extends SQLiteOpenHelper {
                 // add androidRelease
                 addColumn(db, "androidRelease");
             case 5:
+            case 6:
             	// add model specific stuff
                 addColumn(db, "manufacturer");
                 addColumn(db, "model");

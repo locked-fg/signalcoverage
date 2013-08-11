@@ -47,6 +47,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
     
     @Override
     protected Void doInBackground(Void... params) {
+        new org.apache.commons.codec.binary.Base64();
         if (rest == null) {
             Log.i(LOG_TAG, "no Rest service initialized");
             return null;
@@ -63,7 +64,6 @@ public class UrlExporter extends AbstractAsyncExporterTask {
             Collection<ApiData> dataList = new ArrayList<ApiData>(chunksize);
             while (cursor.moveToNext() && !isCancelled()) {
                 ApiData data = new ApiData();
-                // data.userId = userId;
                 data.time = getInt("time");
                 data.accuracy = getDouble("accuracy");
                 data.altitude = getFloat("altitude");
@@ -78,7 +78,6 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 data.model = getString("model");
                 data.device = getString("device");
                 data.osVersion = getString("osVersion");
-                
                 dataList.add(data);
                 i++;
 
@@ -92,7 +91,6 @@ public class UrlExporter extends AbstractAsyncExporterTask {
             }
         } catch (IOException e) {
             notify("Encountered an issue: " + e.getMessage(), android.R.drawable.stat_notify_error);
-            // android.R.drawable.stat_notify_sdcard_usb
             return null;
         }
         publishProgress(100);

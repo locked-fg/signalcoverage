@@ -3,6 +3,9 @@ apply plugin: 'android'
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile project(':ActionBarSherlock-4.2.0:library')
+    compile files('libs/gson-2.2.2.jar')
+    compile files('libs/commons-codec-1.8.jar')
+    compile files('libs/signalcoverage-share-2.0-SNAPSHOT.jar')
 }
 
 android {

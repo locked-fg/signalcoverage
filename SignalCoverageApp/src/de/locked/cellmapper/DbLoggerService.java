@@ -28,7 +28,7 @@ public class DbLoggerService extends Service {
     private long minLocationTime = 5000; // ms
 
     // keep the location lister that long active before unregistering again
-    // thanx htc Desire + cyanogen mod
+    // thanks htc Desire + cyanogen mod
     private long sleepBetweenMeasures = 30000; // ms
     private long updateDuration = 30000; // ms
 
@@ -78,8 +78,8 @@ public class DbLoggerService extends Service {
                         break;
                 }
             }
-
         };
+        handler.sendEmptyMessageDelayed(START_LISTENING, 1);
     }
 
     private void stopListening() {
@@ -96,6 +96,13 @@ public class DbLoggerService extends Service {
     }
 
     private void startListening() {
+        stopListening();
+        if (!reschedule ){
+            return;
+        }
+        if (thread != null && thread.isAlive()){
+            return;
+        }
         Log.d(LOG_TAG, "starting");
         addListener();
         handler.sendEmptyMessageDelayed(STOP_LISTENING, updateDuration);
@@ -105,16 +112,14 @@ public class DbLoggerService extends Service {
 
             @Override
             public void run() {
-                if (minLocationTime <= 0) {
-                    return;
-                }
                 Location last = null;
-                while (!isInterrupted() && reschedule) {
+                boolean inter = isInterrupted();
+                while (!inter && reschedule) {
                     Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                     if (location != null) {
                         long age = System.currentTimeMillis() - location.getTime();
                         float dist = dist(last, location);
-                        Log.d(LOG_TAG, "location age (s): " + (age/1000) + " // dist: " + dist);
+                        Log.d(LOG_TAG, "location age (s): " + (age/1000) + " // dist: " + dist + " // accuracy "+location.getAccuracy());
                         if (age < maxAge && dist > minLocationDistance) {
                             dataListener.onLocationChanged(location);
                             last = location;
@@ -123,7 +128,7 @@ public class DbLoggerService extends Service {
                     try {
                         sleep(minLocationTime);
                     } catch (InterruptedException e) {
-                        Log.i(LOG_TAG, "thread interrruped");
+                        Log.i(LOG_TAG, "thread interrupted");
                         return;
                     }
                 }
@@ -152,8 +157,11 @@ public class DbLoggerService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.i(LOG_TAG, "destroy");
+        handler.removeMessages(START_LISTENING);
+        handler.removeMessages(STOP_LISTENING);
         this.reschedule = false;
-        handler.sendEmptyMessage(STOP_LISTENING);
+        stopListening();
     }
 
     @Override
@@ -178,15 +186,14 @@ public class DbLoggerService extends Service {
         Log.i(LOG_TAG, "add listeners. minTime: " + minLocationTime + " / min dist: " + minLocationDistance);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
-        // locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
         locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, minLocationTime, minLocationDistance, dataListener);
         locationManager.addGpsStatusListener(dataListener);
     }
 
     private void removeListener() {
         Log.i(LOG_TAG, "remove listeners");
-        locationManager.removeUpdates(dataListener);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
+        locationManager.removeUpdates(dataListener);
         locationManager.removeGpsStatusListener(dataListener);
     }
 }
