@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- From: file:/C:/Users/Franz/Documents/eclipseWorkspace/SignalCoverage-Pack/ActionBarSherlock-4.2.0/library/res/values-large/abs__dimens.xml -->
-    <item name="abs__dialog_min_width_major" type="dimen">55%</item>
-    <item name="abs__dialog_min_width_minor" type="dimen">80%</item>
-
-</resources>
