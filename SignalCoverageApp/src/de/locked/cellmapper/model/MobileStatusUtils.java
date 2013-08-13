@@ -7,11 +7,11 @@ import android.app.Service;
 import android.content.Context;
 import android.provider.Settings;
 
-public class Utils {
+public class MobileStatusUtils {
     @SuppressWarnings("unused")
-    private static final String LOG_TAG = Utils.class.getName();
+    private static final String LOG_TAG = MobileStatusUtils.class.getName();
 
-    private Utils() {
+    private MobileStatusUtils() {
     };
 
     /**

@@ -26,8 +26,8 @@ import com.actionbarsherlock.view.MenuItem;
 import de.locked.cellmapper.exporter.FileExporter;
 import de.locked.cellmapper.exporter.UrlExporter;
 import de.locked.cellmapper.model.DbHandler;
+import de.locked.cellmapper.model.MobileStatusUtils;
 import de.locked.cellmapper.model.Preferences;
-import de.locked.cellmapper.model.Utils;
 
 public class CellMapperMain extends SherlockActivity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
@@ -108,7 +108,7 @@ public class CellMapperMain extends SherlockActivity {
 
     private void ensureServiceStarted() {
         Log.d(LOG_TAG, "ensuring that the service is up");
-        if (Utils.isServiceRunning(this, DbLoggerService.class)) {
+        if (MobileStatusUtils.isServiceRunning(this, DbLoggerService.class)) {
 
             return;
         }
@@ -159,12 +159,12 @@ public class CellMapperMain extends SherlockActivity {
 
             private void refresh() {
                 final StringBuilder sb = new StringBuilder(100);
-                sb.append("Service Running: " + Utils.isServiceRunning(context, DbLoggerService.class) + "\n");
+                sb.append("Service Running: " + MobileStatusUtils.isServiceRunning(context, DbLoggerService.class) + "\n");
                 sb.append(db.getLastEntryString()).append("\n");
                 sb.append("Data rows: " + db.getRows()).append("\n");
                 sb.append("------\n");
                 sb.append(db.getLastRowAsString());
-                final boolean isRunning = Utils.isServiceRunning(context, DbLoggerService.class);
+                final boolean isRunning = MobileStatusUtils.isServiceRunning(context, DbLoggerService.class);
 
                 // update UI
                 handler.post(new Runnable() {

@@ -84,7 +84,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
             Log.i(LOG_TAG, "null location received, ignore.");
             return;
         }
-        if (Utils.isAirplaneModeOn(context)) {
+        if (MobileStatusUtils.isAirplaneModeOn(context)) {
             Log.i(LOG_TAG, "we are in airplane mode, ignore.");
             return;
         }
@@ -93,8 +93,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
         // strange: I logged updates for timestamps ~12h ago right after a
         // regular timestamp
         if (age > 3600 * 1000) {
-            Log.i(LOG_TAG,
-                    "out of date location ignored: "
+            Log.i(LOG_TAG, "out of date location ignored: "
                             + sdf.format(new Date(location.getTime())));
             return;
         }
@@ -110,25 +109,8 @@ public class DataListener extends PhoneStateListener implements LocationListener
         }
 
         String carrier = telephonyManager.getNetworkOperatorName();
-        int satellites = countSatellites();
-
-        db.save(location, signal, satellites, carrier, androidRelease,
+        db.save(location, signal, satellitesInFix, carrier, androidRelease,
                 manufacturer, model, device, osVersion);
-    }
-
-    private int countSatellites() {
-//        onGpsStatusChanged(0);
-//        GpsStatus gpsstatus = locationManager.getGpsStatus(null);
-//        if (gpsstatus == null) {
-//            return 0;
-//        }
-//
-//        int satellitesInFix = 0;
-//        Iterator<GpsSatellite> it = gpsstatus.getSatellites().iterator();
-//        while (it.hasNext()) {
-//            satellitesInFix++;
-//        }
-        return satellitesInFix;
     }
 
     @Override
