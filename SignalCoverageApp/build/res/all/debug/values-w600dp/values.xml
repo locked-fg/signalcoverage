@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- From: file:/C:/Users/Franz/Documents/eclipseWorkspace/SignalCoverage-Pack/SignalCoverageApp/build/exploded-bundles/SignalCoveragePackActionBarSherlock420LibraryUnspecified.aar/res/values-w600dp/values.xml -->
-    <integer name="abs__max_action_buttons">5</integer>
-
-</resources>
