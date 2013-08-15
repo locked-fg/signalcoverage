@@ -14,27 +14,23 @@ import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
 import de.locked.cellmapper.model.DataListener;
 import de.locked.cellmapper.model.Preferences;
 
 public class DbLoggerService extends Service {
     private static final String LOG_TAG = DbLoggerService.class.getName();
     private final static int START_LISTENING = 0;
-    private final static int STOP_LISTENING = 1;
-
     // get an update every this many meters (min distance)
     private long minLocationDistance = 50; // m
     // get an update every this many milliseconds
     private long minLocationTime = 5000; // ms
-
     // keep the location lister that long active before unregistering again
     // thanks htc Desire + cyanogen mod
     private long sleepBetweenMeasures = 30000; // ms
     private long updateDuration = 30000; // ms
-
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
-
     private volatile boolean reschedule;
     private DataListener dataListener;
     private Handler handler;
@@ -48,13 +44,14 @@ public class DbLoggerService extends Service {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         dataListener = new DataListener(this);
-        reschedule = true;
 
         // restart on preference change
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences p, String key) {
                 loadPreferences();
+                stopListening();
+                startListening();
             }
         });
 
@@ -68,70 +65,78 @@ public class DbLoggerService extends Service {
                         startListening();
                         break;
 
-                    case STOP_LISTENING:
-                        stopListening();
-                        break;
-
                     default:
-                        Log.e(LOG_TAG, "this was unexpected!");
+                        Log.e(LOG_TAG, "this was unexpected better stop");
                         stopListening();
                         break;
                 }
             }
         };
-        handler.sendEmptyMessageDelayed(START_LISTENING, 1);
     }
 
     private void stopListening() {
-        Log.d(LOG_TAG, "stopping");
+        Log.d(LOG_TAG, "stopListening()");
         removeListener();
-        if (thread != null) {
+        if (thread != null && thread.isAlive()) {
+            Log.d(LOG_TAG, "interrupting thread");
             thread.interrupt();
-            thread = null;
         }
         if (reschedule) {
-            Log.d(LOG_TAG, "rescheduled");
+            Log.d(LOG_TAG, "reschedule to start listening in " + sleepBetweenMeasures + "ms");
             handler.sendEmptyMessageDelayed(START_LISTENING, sleepBetweenMeasures);
         }
     }
 
     private void startListening() {
-        stopListening();
-        if (!reschedule ){
+        if (!reschedule) {
+            Log.d(LOG_TAG, "reschedule = false. do nothing.");
             return;
         }
-        if (thread != null && thread.isAlive()){
+        if (thread != null && thread.isAlive()) {
+            Log.w(LOG_TAG, "Thread still active. do nothing. - This shouldn't happen!");
             return;
         }
-        Log.d(LOG_TAG, "starting");
         addListener();
-        handler.sendEmptyMessageDelayed(STOP_LISTENING, updateDuration);
 
+        Log.d(LOG_TAG, "starting location polling thread");
         thread = new Thread() {
-            private final long maxAge = 5 * 60 * 1000; // 5min
+            private final String LOG = LOG_TAG + "#Thread";
+            private final long maxLocationAge = 5 * 60 * 1000; // 5min
+            private final long startTime = System.currentTimeMillis();
 
             @Override
             public void run() {
-                Location last = null;
-                boolean inter = isInterrupted();
-                while (!inter && reschedule) {
-                    Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    if (location != null) {
-                        long age = System.currentTimeMillis() - location.getTime();
-                        float dist = dist(last, location);
-                        Log.d(LOG_TAG, "location age (s): " + (age/1000) + " // dist: " + dist + " // accuracy "+location.getAccuracy());
-                        if (age < maxAge && dist > minLocationDistance) {
-                            dataListener.onLocationChanged(location);
-                            last = location;
+                try {
+
+                    long threadAge = 0;
+                    Location lastLocation = null;
+                    while (!isInterrupted() && reschedule && threadAge < updateDuration) {
+                        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        if (location != null && !sameLocation(location, lastLocation)) {
+                            long age = System.currentTimeMillis() - location.getTime();
+                            float dist = dist(lastLocation, location);
+                            Log.d(LOG, "location age: " + (age / 1000) + "s // dist: " + dist + "m // accuracy " + location.getAccuracy());
+                            if (age < maxLocationAge && dist > minLocationDistance) {
+                                dataListener.onLocationChanged(location);
+                                lastLocation = location;
+                            }
                         }
-                    }
-                    try {
                         sleep(minLocationTime);
-                    } catch (InterruptedException e) {
-                        Log.i(LOG_TAG, "thread interrupted");
-                        return;
+                        threadAge = System.currentTimeMillis() - startTime;
                     }
+
+                    Log.d(LOG, "thread age " + threadAge + "ms reached - stopping self and reschedule in " + sleepBetweenMeasures + "ms");
+                    handler.sendEmptyMessageDelayed(START_LISTENING, sleepBetweenMeasures);
+                } catch (InterruptedException e) {
+                    Log.i(LOG, "thread interrupted");
+                } finally {
+                    removeListener();
                 }
+            }
+
+            private boolean sameLocation(Location a, Location b) {
+                Log.d(LOG, "same location as before");
+                return a != null && b != null && a.getTime() == b.getTime();
             }
 
             private float dist(Location a, Location b) {
@@ -158,8 +163,8 @@ public class DbLoggerService extends Service {
     @Override
     public void onDestroy() {
         Log.i(LOG_TAG, "destroy");
+        stopListening();
         handler.removeMessages(START_LISTENING);
-        handler.removeMessages(STOP_LISTENING);
         this.reschedule = false;
         stopListening();
     }
