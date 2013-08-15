@@ -57,7 +57,7 @@ The signature is used to validate the upload and is computed by
 
 
 ## History:
-MinSDK 8
+* v2.1.0: save some new values (os, android version, ...), less battery usage, internal changes, better satellite count
 * v2.0.5: Fixed possible service when stopping the service
 * v2.0.4: Progressbar moved to Notifications (fixed #1)
 * v2.0.3: Issue fixed #4 (DB handling)
