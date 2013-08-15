@@ -67,6 +67,7 @@
     <orderEntry type="library" exported="" name="gson-2.2.2" level="project" />
     <orderEntry type="library" exported="" name="signalcoverage-share-2.0-SNAPSHOT" level="project" />
     <orderEntry type="library" exported="" name="commons-codec-1.8" level="project" />
+    <orderEntry type="library" exported="" name="commons-codec-1.8" level="project" />
   </component>
 </module>
 
