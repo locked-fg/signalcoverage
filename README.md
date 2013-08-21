@@ -1,7 +1,7 @@
 # SignalCoverage 
-(formerly called Cellmapper)
+(see also https://github.com/locked-fg/signalcoverage-server & https://github.com/locked-fg/signalcoverage-share)
 
-An [Android app](https://play.google.com/store/apps/details?id=de.locked.cellmapper)
+[Android app](https://play.google.com/store/apps/details?id=de.locked.cellmapper)
 to record signal data with GPS coordinates.
 You can export your data to CSV and KML or upload to a server.
 
