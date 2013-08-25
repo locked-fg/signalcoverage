@@ -55,6 +55,7 @@
     </string-array>
     <string-array name="minLocationTimeEntries">
         <item>Off</item>
+        <item>1 sec</item>
         <item>2 sec</item>
         <item>3 sec</item>
         <item>4 sec</item>
@@ -73,6 +74,7 @@
         <item>60 min</item>
     </string-array>
     <string-array name="minLocationTimeValues">
+        <item>0</item>
         <item>1</item>
         <item>2</item>
         <item>3</item>

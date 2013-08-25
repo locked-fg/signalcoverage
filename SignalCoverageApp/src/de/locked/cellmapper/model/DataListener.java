@@ -94,7 +94,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
         // regular timestamp
         if (age > 3600 * 1000) {
             Log.i(LOG_TAG, "out of date location ignored: "
-                            + sdf.format(new Date(location.getTime())));
+                    + sdf.format(new Date(location.getTime())));
             return;
         }
 
@@ -139,12 +139,12 @@ public class DataListener extends PhoneStateListener implements LocationListener
         int satellitesInFix = 0;
         int timetofix = locationManager.getGpsStatus(null).getTimeToFirstFix();
         for (GpsSatellite sat : locationManager.getGpsStatus(null).getSatellites()) {
-            if(sat.usedInFix()) {
+            if (sat.usedInFix()) {
                 satellitesInFix++;
             }
             satellites++;
         }
-        Log.i(LOG_TAG, "Time to first fix = "+timetofix+"ms, Satellites: "+satellites + ", In last fix: "+satellitesInFix);
+        Log.i(LOG_TAG, "Time to first fix = " + timetofix + "ms, Satellites: " + satellites + ", In last fix: " + satellitesInFix);
         this.satellitesInFix = satellitesInFix;
     }
 

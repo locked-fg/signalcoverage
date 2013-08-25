@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -20,7 +21,9 @@ import de.locked.cellmapper.model.Preferences;
 
 public class DbLoggerService extends Service {
     private static final String LOG_TAG = DbLoggerService.class.getName();
-    private final static int START_LISTENING = 0;
+    private static final int START_LISTENING = 0;
+    private static final int MIN_TIME = 250;
+    private final SignalChangeTrigger trigger = new SignalChangeTrigger();
     // get an update every this many meters (min distance)
     private long minLocationDistance = 50; // m
     // get an update every this many milliseconds
@@ -35,6 +38,7 @@ public class DbLoggerService extends Service {
     private DataListener dataListener;
     private Handler handler;
     private Thread thread;
+    private boolean updateOnSignalChange;
 
     @Override
     public void onCreate() {
@@ -96,6 +100,7 @@ public class DbLoggerService extends Service {
             Log.w(LOG_TAG, "Thread still active. do nothing. - This shouldn't happen!");
             return;
         }
+
         addListener();
 
         Log.d(LOG_TAG, "starting location polling thread");
@@ -107,10 +112,10 @@ public class DbLoggerService extends Service {
             @Override
             public void run() {
                 try {
-
                     long threadAge = 0;
                     Location lastLocation = null;
                     while (!isInterrupted() && reschedule && threadAge < updateDuration) {
+                        locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, dataListener, getMainLooper());
                         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                         if (location != null && !sameLocation(location, lastLocation)) {
                             long age = System.currentTimeMillis() - location.getTime();
@@ -177,28 +182,44 @@ public class DbLoggerService extends Service {
     private void loadPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        sleepBetweenMeasures = Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 30) * 1000l;
+        sleepBetweenMeasures = Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 10) * 1000l;
         updateDuration = Preferences.getAsLong(preferences, Preferences.update_duration, 30) * 1000l;
 
         minLocationTime = Preferences.getAsLong(preferences, Preferences.min_location_time, 60) * 1000l;
         minLocationDistance = Preferences.getAsLong(preferences, Preferences.min_location_distance, 50);
 
+        updateOnSignalChange = preferences.getBoolean(Preferences.updateOnSignalChange, true);
+
         // ensure a minimum value
-        minLocationTime = Math.max(minLocationTime, 1000);
+        minLocationTime = Math.max(minLocationTime, MIN_TIME);
     }
 
     private void addListener() {
         Log.i(LOG_TAG, "add listeners. minTime: " + minLocationTime + " / min dist: " + minLocationDistance);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        if (updateOnSignalChange) {
+            telephonyManager.listen(trigger, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, minLocationTime, minLocationDistance, dataListener);
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, dataListener);
         locationManager.addGpsStatusListener(dataListener);
     }
 
     private void removeListener() {
         Log.i(LOG_TAG, "remove listeners");
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
+        telephonyManager.listen(trigger, PhoneStateListener.LISTEN_NONE);
         locationManager.removeUpdates(dataListener);
         locationManager.removeGpsStatusListener(dataListener);
+    }
+
+    /**
+     * Class that triggers a measurement when the signal strength changes
+     */
+    class SignalChangeTrigger extends PhoneStateListener {
+        @Override
+        public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+            locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, dataListener, getMainLooper());
+        }
     }
 }
