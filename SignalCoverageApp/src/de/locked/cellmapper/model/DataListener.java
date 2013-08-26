@@ -28,8 +28,8 @@ public class DataListener extends PhoneStateListener implements LocationListener
     private final TelephonyManager telephonyManager;
     private final DbHandler db;
     private final ConnectivityManager connectivityManager;
-    private final int maxLength = 100;
-    private final LinkedList<SignalEntry> ll = new LinkedList<SignalEntry>();
+    private final int signalListMaxLength = 100;
+    private final LinkedList<SignalEntry> signalList = new LinkedList<SignalEntry>();
     // device data
     private final String manufacturer = Build.MANUFACTURER; // HTC
     private final String device = Build.DEVICE; // bravo
@@ -38,7 +38,6 @@ public class DataListener extends PhoneStateListener implements LocationListener
     // Build.VERSION.SDK_INT returns the API version. In a rooted phone,
     // this might be null!
     private final String androidRelease = Build.VERSION.RELEASE; // android version like 2.3.7
-
     private int satellitesInFix;
 
     public DataListener(Context context) {
@@ -89,35 +88,52 @@ public class DataListener extends PhoneStateListener implements LocationListener
             return;
         }
 
-        long age = Math.abs(location.getTime() - System.currentTimeMillis()) / 1000;
-        // strange: I logged updates for timestamps ~12h ago right after a
-        // regular timestamp
+        // I logged updates for timestamps ~12h ago right after a regular timestamp.
+        // So reject all timestamps that seem to be older than an hour
+        long age = Math.abs(location.getTime() - System.currentTimeMillis());
         if (age > 3600 * 1000) {
             Log.i(LOG_TAG, "out of date location ignored: "
                     + sdf.format(new Date(location.getTime())));
             return;
         }
 
-        SignalStrength signal = null;
-        for (int i = 0; i < ll.size() && signal == null; i++) {
-            if (location.getTime() > ll.get(i).time) {
-                signal = ll.get(i).signal;
-            }
-        }
+        // signal information might be younger than the location
+        SignalStrength signal = findSignalFor(location.getTime());
         if (signal == null) {
-            return;
+            return; // well, without signal information all this is rather useless
         }
 
+        // keep roaming in mind!
         String carrier = telephonyManager.getNetworkOperatorName();
         db.save(location, signal, satellitesInFix, carrier, androidRelease,
                 manufacturer, model, device, osVersion);
     }
 
+    /**
+     * Find most recent signal that is younger than the age og the location.
+     * <p/>
+     * S9 = Signal at timestamp 9, L7.5 = Location at 7.5</br>
+     * S9 S8 L7.5 S7 S6 S5</br>
+     * Find first signal that is younger than the age of the location</br>
+     * Would be S7 in this case.
+     *
+     * @param timestamp of the location
+     * @return the SignalStrength if one was found, null otherwise.
+     */
+    private SignalStrength findSignalFor(long timestamp) {
+        for (SignalEntry entry : signalList) {
+            if (timestamp > entry.time) {
+                return entry.signal;
+            }
+        }
+        return null;
+    }
+
     @Override
     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-        ll.addFirst(new SignalEntry(signalStrength));
-        while (ll.size() > maxLength) {
-            ll.removeLast();
+        signalList.addFirst(new SignalEntry(signalStrength));
+        while (signalList.size() > signalListMaxLength) {
+            signalList.removeLast();
         }
     }
 
