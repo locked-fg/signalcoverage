@@ -57,6 +57,10 @@ The signature is used to validate the upload and is computed by
 
 
 ## History:
+* v2.2.0 UNRELEASED:
+    * add passive provider (including setting)
+    * add gps fix request in logger service
+    * minor internal changed
 * v2.1.0: save some new values (os, android version, ...), less battery usage, internal changes, better satellite count
 * v2.0.5: Fixed possible service when stopping the service
 * v2.0.4: Progressbar moved to Notifications (fixed #1)
