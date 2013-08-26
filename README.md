@@ -12,7 +12,7 @@ Currently the only server side application is hosted at
 ## Upload Protocol:
 In order to upload your data to a server, a very simple protocol is used.
 In order to avoid some hazzle about details, the 
-[signalcoverage-share](https://github.com/locked-fg/signalcoverage-share/tree/master/src/main/java/de/locked/cellmapper/share/v1)
+[signalcoverage-share](https://github.com/locked-fg/signalcoverage-share)
 library covers some implementations.
 
 The conversion from/to JSON is currently done via [GSON](https://code.google.com/p/google-gson/).
@@ -56,7 +56,11 @@ The signature is used to validate the upload and is computed by
 * convert the hash into hex format
 
 
-## History:
+## Changelog:
+* v2.2.0 UNRELEASED:
+    * add passive provider (including setting)
+    * add gps fix request in logger service
+    * minor internal changed
 * v2.1.0: save some new values (os, android version, ...), less battery usage, internal changes, better satellite count
 * v2.0.5: Fixed possible service when stopping the service
 * v2.0.4: Progressbar moved to Notifications (fixed #1)
