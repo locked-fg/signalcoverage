@@ -9,11 +9,6 @@
         <item>5 min</item>
         <item>10 min</item>
         <item>15 min</item>
-        <item>20 min</item>
-        <item>25 min</item>
-        <item>30 min</item>
-        <item>45 min</item>
-        <item>1 std</item>
     </string-array>
     <string-array name="updateIntervalValues">
         <item>60</item>
@@ -23,11 +18,6 @@
         <item>300</item>
         <item>600</item>
         <item>900</item>
-        <item>1200</item>
-        <item>1500</item>
-        <item>1800</item>
-        <item>2700</item>
-        <item>3600</item>
     </string-array>
     <string-array name="sleepBetweenLocationEntries">
         <item>1 sec</item>
@@ -39,7 +29,6 @@
         <item>15 min</item>
         <item>30 min</item>
         <item>1 h</item>
-        <item>2 h</item>
     </string-array>
     <string-array name="sleepBetweenLocationValues">
         <item>1</item>
@@ -51,8 +40,9 @@
         <item>900</item>
         <item>1800</item>
         <item>3600</item>
-        <item>7200</item>
     </string-array>
+
+    <!-- min time used in location listener -->
     <string-array name="minLocationTimeEntries">
         <item>Off</item>
         <item>1 sec</item>
@@ -69,9 +59,6 @@
         <item>3 min</item>
         <item>4 min</item>
         <item>5 min</item>
-        <item>15 min</item>
-        <item>30 min</item>
-        <item>60 min</item>
     </string-array>
     <string-array name="minLocationTimeValues">
         <item>0</item>
@@ -89,10 +76,9 @@
         <item>180</item>
         <item>240</item>
         <item>300</item>
-        <item>900</item>
-        <item>1800</item>
-        <item>3600</item>
     </string-array>
+
+    <!-- min dist used in location listener -->
     <string-array name="minLocationDistEntries">
         <item>Off</item>
         <item>5 m</item>

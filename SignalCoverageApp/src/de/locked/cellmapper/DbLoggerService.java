@@ -116,6 +116,8 @@ public class DbLoggerService extends Service {
                     Location lastLocation = null;
                     while (!isInterrupted() && reschedule && threadAge < updateDuration) {
                         locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, dataListener, getMainLooper());
+
+                        // handle polling
                         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                         if (location != null && !sameLocation(location, lastLocation)) {
                             long age = System.currentTimeMillis() - location.getTime();
@@ -126,6 +128,7 @@ public class DbLoggerService extends Service {
                                 lastLocation = location;
                             }
                         }
+
                         sleep(minLocationTime);
                         threadAge = System.currentTimeMillis() - startTime;
                     }

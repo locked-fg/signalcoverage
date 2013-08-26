@@ -1,76 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orderingFromXml="true" >
+                  android:orderingFromXml="true">
 
-    <PreferenceCategory android:title="Location" >
+    <PreferenceCategory android:title="Location">
         <ListPreference
-            android:defaultValue="60"
-            android:entries="@array/updateInterval"
-            android:entryValues="@array/updateIntervalValues"
-            android:key="update_duration"
-            android:summary="Listen this long for updates until setting asleep."
-            android:title="Update Duration" />
+                android:defaultValue="60"
+                android:entries="@array/updateInterval"
+                android:entryValues="@array/updateIntervalValues"
+                android:key="update_duration"
+                android:summary="Listen this long for updates until setting asleep."
+                android:title="Update Duration"/>
         <ListPreference
-            android:defaultValue="1"
-            android:entries="@array/sleepBetweenLocationEntries"
-            android:entryValues="@array/sleepBetweenLocationValues"
-            android:key="sleep_between_measures"
-            android:summary="Time between measurements (reduce power consumption)"
-            android:title="Sleep between updates" />
+                android:defaultValue="1"
+                android:entries="@array/sleepBetweenLocationEntries"
+                android:entryValues="@array/sleepBetweenLocationValues"
+                android:key="sleep_between_measures"
+                android:summary="Time between measurements (reduce power consumption)"
+                android:title="Sleep between updates"/>
     </PreferenceCategory>
-    <PreferenceCategory android:title="Update frequency" >
+    <PreferenceCategory android:title="Update frequency">
         <ListPreference
-            android:defaultValue="5"
-            android:entries="@array/minLocationTimeEntries"
-            android:entryValues="@array/minLocationTimeValues"
-            android:key="min_location_time"
-            android:summary="Minimum time between location updates."
-            android:title="Min time" />
+                android:defaultValue="5"
+                android:entries="@array/minLocationTimeEntries"
+                android:entryValues="@array/minLocationTimeValues"
+                android:key="min_location_time"
+                android:summary="Minimum time between location updates."
+                android:title="Min time"/>
         <ListPreference
-            android:defaultValue="-1"
-            android:entries="@array/minLocationDistEntries"
-            android:entryValues="@array/minLocationDistValues"
-            android:key="min_location_dist"
-            android:summary="Minimum distance between location updates."
-            android:title="Min distance" />
+                android:defaultValue="-1"
+                android:entries="@array/minLocationDistEntries"
+                android:entryValues="@array/minLocationDistValues"
+                android:key="min_location_dist"
+                android:summary="Minimum distance between location updates."
+                android:title="Min distance"/>
         <CheckBoxPreference
                 android:defaultValue="true"
                 android:key="updateOnSignalChange"
-                android:summaryOff="Location update on signal change is disabled."
-                android:summaryOn="Location update on signal change is enabled."
-                android:title="Signal strength change triggers measurement."/>
+                android:summaryOff="Additional location update on signal change is disabled."
+                android:summaryOn="Additional location update on signal change is enabled."
+                android:title="Dynamic measurement"/>
 
     </PreferenceCategory>
-    <PreferenceCategory android:title="Upload Account" >
+    <PreferenceCategory android:title="Upload Account">
         <EditTextPreference
-            android:defaultValue="https://signalcoverage-locked.rhcloud.com/rest/"
-            android:key="uploadUrl"
-            android:singleLine="true"
-            android:summary="The URL to which the data is uploaded."
-            android:title="Upload URL"
-            android:inputType="textNoSuggestions"
-             />
+                android:defaultValue="https://signalcoverage-locked.rhcloud.com/rest/"
+                android:key="uploadUrl"
+                android:singleLine="true"
+                android:summary="The URL to which the data is uploaded."
+                android:title="Upload URL"
+                android:inputType="textNoSuggestions"
+                />
         <EditTextPreference
-            android:key="login"
-            android:singleLine="true"
-            android:summary="The login for the upload service. Leave empty of auto signup."
-            android:title="Login"
-            android:inputType="textNoSuggestions"
-            />
+                android:key="login"
+                android:singleLine="true"
+                android:summary="The login for the upload service. Leave empty of auto signup."
+                android:title="Login"
+                android:inputType="textNoSuggestions"
+                />
         <EditTextPreference
-            android:key="password"
-            android:password="true"
-            android:singleLine="true"
-            android:summary="The password for the upload service."
-            android:title="Password"
-            android:inputType="textNoSuggestions"
-             />
+                android:key="password"
+                android:password="true"
+                android:singleLine="true"
+                android:summary="The password for the upload service."
+                android:title="Password"
+                android:inputType="textNoSuggestions"
+                />
         <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="licenseAgreed"
-            android:summaryOff="You have not (yet) agreed to the upload license. Uploading is disabled."
-            android:summaryOn="You agreed to the upload license. Uploading is enabled."
-            android:title="License agreed" />
+                android:defaultValue="false"
+                android:key="licenseAgreed"
+                android:summaryOff="You have not (yet) agreed to the upload license. Uploading is disabled."
+                android:summaryOn="You agreed to the upload license. Uploading is enabled."
+                android:title="License agreed"/>
     </PreferenceCategory>
 
 </PreferenceScreen>
