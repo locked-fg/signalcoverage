@@ -57,7 +57,7 @@ The signature is used to validate the upload and is computed by
 
 
 ## Changelog:
-* v2.2.0 UNRELEASED:
+* v2.2.0:
     * add passive provider (including setting)
     * improved logging
     * request updates on signal change
