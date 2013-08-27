@@ -19,8 +19,8 @@ import android.util.Log;
 import de.locked.cellmapper.model.DataListener;
 import de.locked.cellmapper.model.Preferences;
 
-public class DbLoggerService extends Service {
-    private static final String LOG_TAG = DbLoggerService.class.getName();
+public class ActiveListenerService extends Service {
+    private static final String LOG_TAG = ActiveListenerService.class.getName();
     private static final int START_LISTENING = 0;
     private static final int MIN_TIME = 250;
     private final SignalChangeTrigger trigger = new SignalChangeTrigger();

@@ -32,7 +32,7 @@
         </activity>
         <activity android:name=".MyPreferenceActivity" />
 
-        <service android:name=".DbLoggerService" />
+        <service android:name=".ActiveListenerService"/>
     </application>
 
 </manifest>

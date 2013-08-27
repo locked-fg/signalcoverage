@@ -113,13 +113,13 @@ public class CellMapperMain extends SherlockActivity {
     }
 
     private void stopLoggerService() {
-        boolean success = stopService(new Intent(this, DbLoggerService.class));
+        boolean success = stopService(new Intent(this, ActiveListenerService.class));
         Log.i(LOG_TAG, "stopping service succeeded: " + success);
     }
 
     private void ensureServiceStarted() {
         Log.d(LOG_TAG, "ensuring that the service is up");
-        if (MobileStatusUtils.isServiceRunning(this, DbLoggerService.class)) {
+        if (MobileStatusUtils.isServiceRunning(this, ActiveListenerService.class)) {
 
             return;
         }
@@ -143,7 +143,7 @@ public class CellMapperMain extends SherlockActivity {
 
         // now start!
         Log.i(LOG_TAG, "starting service");
-        startService(new Intent(this, DbLoggerService.class));
+        startService(new Intent(this, ActiveListenerService.class));
     }
 
     private void startUiUpdates() {
@@ -170,12 +170,12 @@ public class CellMapperMain extends SherlockActivity {
 
             private void refresh() {
                 final StringBuilder sb = new StringBuilder(100);
-                sb.append("Service Running: " + MobileStatusUtils.isServiceRunning(context, DbLoggerService.class) + "\n");
+                sb.append("Service Running: " + MobileStatusUtils.isServiceRunning(context, ActiveListenerService.class) + "\n");
                 sb.append(db.getLastEntryString()).append("\n");
                 sb.append("Data rows: " + db.getRows()).append("\n");
                 sb.append("------\n");
                 sb.append(db.getLastRowAsString());
-                final boolean isRunning = MobileStatusUtils.isServiceRunning(context, DbLoggerService.class);
+                final boolean isRunning = MobileStatusUtils.isServiceRunning(context, ActiveListenerService.class);
 
                 // update UI
                 handler.post(new Runnable() {
