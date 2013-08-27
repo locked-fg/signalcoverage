@@ -33,10 +33,8 @@ public class CellMapperMain extends SherlockActivity {
     private static final String LOG_TAG = CellMapperMain.class.getName();
     private static final int UI_REFRESH_INTERVAL = 150; // ms
     private final Handler handler = new Handler();
-
     private Thread refresher;
     private boolean informedUserAboutProblems = false;
-    
     private DbHandler db;
 
     @Override
@@ -48,7 +46,6 @@ public class CellMapperMain extends SherlockActivity {
         // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         db = DbHandler.get(this);
-        
 
         ((Button) findViewById(R.id.startButton)).setOnClickListener(new OnClickListener() {
 
@@ -69,6 +66,19 @@ public class CellMapperMain extends SherlockActivity {
 
         startUiUpdates();
         ensureServiceStarted();
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (preferences.getBoolean(Preferences.showWhatsNew, true)) {
+            new AlertDialog.Builder(this)
+                    .setTitle("New Features in v2.2.0")
+                    .setMessage("* listen to passive updates\n" +
+                            "* request updates on signal change\n" +
+                            "* improved logging\n" +
+                            "* minor internal changes")
+                    .setPositiveButton("OK", null)
+                    .create().show();
+            preferences.edit().putBoolean(Preferences.showWhatsNew, true).commit();
+        }
     }
 
     @Override
@@ -103,7 +113,7 @@ public class CellMapperMain extends SherlockActivity {
 
     private void stopLoggerService() {
         boolean success = stopService(new Intent(this, DbLoggerService.class));
-        Log.i(LOG_TAG, "stopping service succeeded: "+success);
+        Log.i(LOG_TAG, "stopping service succeeded: " + success);
     }
 
     private void ensureServiceStarted() {

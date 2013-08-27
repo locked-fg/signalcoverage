@@ -15,6 +15,7 @@ public class Preferences {
     public static String password = "password";
     public static String licenseAgreed = "licenseAgreed";
     public static String updateOnSignalChange = "updateOnSignalChange";
+    public static String showWhatsNew = "showWhatsNewV11";
 
     public static long getAsLong(SharedPreferences preferences, String key, long def) {
         try {
@@ -35,7 +36,7 @@ public class Preferences {
 
         if (!preferences.getAll().containsKey(key)) {
             Log.i(LOG_TAG, "preference " + key + " was requested but not contained in the preferences! "
-                    + "Are you shure that you chose the correct key?");
+                    + "Are you sure that you chose the correct key?");
         }
 
         return def;
