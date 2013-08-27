@@ -67,6 +67,7 @@ public class CellMapperMain extends SherlockActivity {
         startUiUpdates();
         ensureServiceStarted();
 
+        // show what's new dialog once per version
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean(Preferences.showWhatsNew, true)) {
             new AlertDialog.Builder(this)
