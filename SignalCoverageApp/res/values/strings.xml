@@ -7,11 +7,10 @@
     <string name="title_activity_main">SignalCoverage</string>
     <string name="title_activity_config">ConfigActivity</string>
     <string name="configButton">Config</string>
-    
-	<string name="start">Start</string>
-	<string name="stop">Stop</string>
-	
-	<string name="open_settings">Open Settings</string>
+    <string name="togglePassiveService">Use passive Service</string>
+    <string name="toggleActiveService">USe active Service</string>
+
+    <string name="open_settings">Open Settings</string>
 	<string name="closeX">X</string>
 	
 	<string name="exportNotificationHeadline">SignalCoverage Data Export</string>

@@ -33,6 +33,7 @@
         <activity android:name=".MyPreferenceActivity" />
 
         <service android:name=".ActiveListenerService"/>
+        <service android:name=".PassiveListenerService"/>
     </application>
 
 </manifest>

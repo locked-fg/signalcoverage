@@ -204,7 +204,7 @@ public class ActiveListenerService extends Service {
             telephonyManager.listen(trigger, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, dataListener);
+//        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, dataListener);
         locationManager.addGpsStatusListener(dataListener);
     }
 

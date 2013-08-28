@@ -1,31 +1,52 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/verticalMain"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_gravity="right|center_vertical"
-    android:gravity="top"
-    android:orientation="vertical" >
+              android:id="@+id/verticalMain"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:layout_gravity="right|center_vertical"
+              android:gravity="top"
+              android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/buttonsTop"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="fill_horizontal" >
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
 
-        <Button
-            android:id="@+id/startButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight=".5"
-            android:text="@string/start" />
+        <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/toggleActiveService"
+                android:id="@+id/textView"
+                android:layout_weight="1"
+                android:layout_gravity="center"/>
 
-        <Button
-            android:id="@+id/stopButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight=".5"
-            android:text="@string/stop" />
+        <ToggleButton
+                android:layout_width="wrap_content"
+                android:layout_height="35dp"
+                android:text="New ToggleButton"
+                android:id="@+id/activeToggleButton"
+                android:checked="false"
+                android:layout_gravity="right"
+                />
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+        <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/togglePassiveService"
+                android:id="@+id/textView2"
+                android:layout_gravity="center_horizontal|top"
+                android:layout_weight="1"/>
+
+        <ToggleButton
+                android:layout_width="wrap_content"
+                android:layout_height="35dp"
+                android:text="New ToggleButton"
+                android:id="@+id/passiveToggleButton"/>
     </LinearLayout>
 
     <EditText

@@ -16,8 +16,8 @@ import android.provider.Settings.Secure;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
@@ -40,27 +40,32 @@ public class CellMapperMain extends SherlockActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(LOG_TAG, "create activity");
         setContentView(R.layout.activity_main);
 
         // set defaults
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         db = DbHandler.get(this);
 
-        ((Button) findViewById(R.id.startButton)).setOnClickListener(new OnClickListener() {
+        ((ToggleButton) findViewById(R.id.activeToggleButton)).setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
-                Log.d(LOG_TAG, "start click");
-                ensureServiceStarted();
+                if (((ToggleButton) arg0).isChecked()) {
+                    ensureServiceStarted();
+                } else {
+                    stopActiveService();
+                }
             }
         });
-        ((Button) findViewById(R.id.stopButton)).setOnClickListener(new OnClickListener() {
+        ((ToggleButton) findViewById(R.id.passiveToggleButton)).setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
-                Log.d(LOG_TAG, "stop click");
-                stopLoggerService();
+                if (((ToggleButton) arg0).isChecked()) {
+                    startPassiveService();
+                } else {
+                    stopPassiveService();
+                }
             }
         });
 
@@ -71,14 +76,11 @@ public class CellMapperMain extends SherlockActivity {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean(Preferences.showWhatsNew, true)) {
             new AlertDialog.Builder(this)
-                    .setTitle("New Features in v2.2.0")
-                    .setMessage("* listen to passive updates\n" +
-                            "* request updates on signal change\n" +
-                            "* improved logging\n" +
-                            "* minor internal changes")
+                    .setTitle("New Features in v2.3.0")
+                    .setMessage("* explicit passive only option")
                     .setPositiveButton("OK", null)
                     .create().show();
-            preferences.edit().putBoolean(Preferences.showWhatsNew, true).commit();
+            preferences.edit().putBoolean(Preferences.showWhatsNew, false).commit();
         }
     }
 
@@ -107,12 +109,13 @@ public class CellMapperMain extends SherlockActivity {
     public void onDestroy() {
         super.onDestroy();
         Log.i(LOG_TAG, "destroy activity");
-        stopLoggerService();
+        stopActiveService();
         stopUiUpdates();
+        stopPassiveService();
         db.close();
     }
 
-    private void stopLoggerService() {
+    private void stopActiveService() {
         boolean success = stopService(new Intent(this, ActiveListenerService.class));
         Log.i(LOG_TAG, "stopping service succeeded: " + success);
     }
@@ -120,7 +123,6 @@ public class CellMapperMain extends SherlockActivity {
     private void ensureServiceStarted() {
         Log.d(LOG_TAG, "ensuring that the service is up");
         if (MobileStatusUtils.isServiceRunning(this, ActiveListenerService.class)) {
-
             return;
         }
 
@@ -146,6 +148,14 @@ public class CellMapperMain extends SherlockActivity {
         startService(new Intent(this, ActiveListenerService.class));
     }
 
+    private void startPassiveService() {
+        startService(new Intent(this, PassiveListenerService.class));
+    }
+
+    private void stopPassiveService() {
+        stopService(new Intent(this, PassiveListenerService.class));
+    }
+
     private void startUiUpdates() {
         // do nothing if we're alive
         if (refresher != null && refresher.isAlive()) {
@@ -169,13 +179,15 @@ public class CellMapperMain extends SherlockActivity {
             }
 
             private void refresh() {
-                final StringBuilder sb = new StringBuilder(100);
+                final StringBuilder sb = new StringBuilder(300);
                 sb.append("Service Running: " + MobileStatusUtils.isServiceRunning(context, ActiveListenerService.class) + "\n");
                 sb.append(db.getLastEntryString()).append("\n");
                 sb.append("Data rows: " + db.getRows()).append("\n");
                 sb.append("------\n");
                 sb.append(db.getLastRowAsString());
-                final boolean isRunning = MobileStatusUtils.isServiceRunning(context, ActiveListenerService.class);
+
+                final boolean isActiveRunning = MobileStatusUtils.isServiceRunning(context, ActiveListenerService.class);
+                final boolean isPassiveRunning = MobileStatusUtils.isServiceRunning(context, PassiveListenerService.class);
 
                 // update UI
                 handler.post(new Runnable() {
@@ -183,8 +195,8 @@ public class CellMapperMain extends SherlockActivity {
                     @Override
                     public void run() {
                         ((TextView) findViewById(R.id.textfield)).setText(sb.toString());
-                        ((Button) findViewById(R.id.startButton)).setEnabled(!isRunning);
-                        ((Button) findViewById(R.id.stopButton)).setEnabled(isRunning);
+                        ((ToggleButton) findViewById(R.id.activeToggleButton)).setChecked(isActiveRunning);
+                        ((ToggleButton) findViewById(R.id.passiveToggleButton)).setChecked(isPassiveRunning);
                     }
                 });
             }
