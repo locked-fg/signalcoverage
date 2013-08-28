@@ -71,14 +71,15 @@ public class CellMapperMain extends SherlockActivity {
 
         startUiUpdates();
         ensureServiceStarted();
+        startPassiveService();
 
         // show what's new dialog once per version
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean(Preferences.showWhatsNew, true)) {
             new AlertDialog.Builder(this)
-                    .setTitle("New Features in v2.3.0")
-                    .setMessage("* explicit passive only option")
-                    .setPositiveButton("OK", null)
+                    .setTitle(R.string.whatsNewTitle)
+                    .setMessage(R.string.whatsNewBody)
+                    .setPositiveButton(android.R.string.ok, null)
                     .create().show();
             preferences.edit().putBoolean(Preferences.showWhatsNew, false).commit();
         }
@@ -149,6 +150,9 @@ public class CellMapperMain extends SherlockActivity {
     }
 
     private void startPassiveService() {
+        if (MobileStatusUtils.isServiceRunning(this, PassiveListenerService.class)) {
+            return;
+        }
         startService(new Intent(this, PassiveListenerService.class));
     }
 
@@ -180,7 +184,8 @@ public class CellMapperMain extends SherlockActivity {
 
             private void refresh() {
                 final StringBuilder sb = new StringBuilder(300);
-                sb.append("Service Running: " + MobileStatusUtils.isServiceRunning(context, ActiveListenerService.class) + "\n");
+                sb.append("Active  service running: " + MobileStatusUtils.isServiceRunning(context, ActiveListenerService.class) + "\n");
+                sb.append("Passive service running: " + MobileStatusUtils.isServiceRunning(context, PassiveListenerService.class) + "\n");
                 sb.append(db.getLastEntryString()).append("\n");
                 sb.append("Data rows: " + db.getRows()).append("\n");
                 sb.append("------\n");

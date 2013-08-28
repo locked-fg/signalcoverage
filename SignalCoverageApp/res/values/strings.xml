@@ -7,8 +7,9 @@
     <string name="title_activity_main">SignalCoverage</string>
     <string name="title_activity_config">ConfigActivity</string>
     <string name="configButton">Config</string>
-    <string name="togglePassiveService">Use passive Service</string>
-    <string name="toggleActiveService">USe active Service</string>
+
+    <string name="togglePassiveService">Toggle passive service</string>
+    <string name="toggleActiveService">Toggle active service</string>
 
     <string name="open_settings">Open Settings</string>
 	<string name="closeX">X</string>
@@ -16,5 +17,10 @@
 	<string name="exportNotificationHeadline">SignalCoverage Data Export</string>
 	<string name="exportNotificationSd">Save to SD: %d%%</string>
 	<string name="exportNotificationUrl">Upload progress: %d%%</string>
-					
+
+    <string name="whatsNewTitle">What\'s new in v2.3.0</string>
+    <string name="whatsNewBody">* explicit passive only option</string>
+
+    <string name="empty"></string>
+
 </resources>

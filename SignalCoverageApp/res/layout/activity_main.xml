@@ -26,7 +26,8 @@
                 android:id="@+id/activeToggleButton"
                 android:checked="false"
                 android:layout_gravity="right"
-                />
+                android:textOff="@string/empty"
+                android:textOn="@string/empty"/>
     </LinearLayout>
 
     <LinearLayout
@@ -46,7 +47,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="35dp"
                 android:text="New ToggleButton"
-                android:id="@+id/passiveToggleButton"/>
+                android:id="@+id/passiveToggleButton"
+                android:textOff="@string/empty"
+                android:textOn="@string/empty"/>
     </LinearLayout>
 
     <EditText

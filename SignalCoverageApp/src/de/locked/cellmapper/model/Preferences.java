@@ -15,8 +15,7 @@ public class Preferences {
     public static String password = "password";
     public static String licenseAgreed = "licenseAgreed";
     public static String updateOnSignalChange = "updateOnSignalChange";
-    //    public static String startPassiveService = "startPassiveService";
-    public static String showWhatsNew = "showWhatsNewV12";
+    public static String showWhatsNew = "showWhatsNewV13";
 
     public static long getAsLong(SharedPreferences preferences, String key, long def) {
         try {
@@ -32,7 +31,7 @@ public class Preferences {
             long value = Long.parseLong(valueString);
             return value;
         } catch (Exception e) {
-            Log.d(LOG_TAG, "value '"+valueString+"' could not be parsed to long: " + key);
+            Log.d(LOG_TAG, "value '" + valueString + "' could not be parsed to long: " + key);
         }
 
         if (!preferences.getAll().containsKey(key)) {
