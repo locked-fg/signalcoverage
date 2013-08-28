@@ -57,18 +57,14 @@ The signature is used to validate the upload and is computed by
 
 
 ## Changelog:
-* v2.3.0:
-    * explicit passive only option
+* v2.2.1:
+    * the what's new dialog shows up always
 * v2.2.0:
     * add passive provider (including setting)
     * improved logging
     * request updates on signal change
     * minor internal changes
-* v2.1.0:
-    * save some new values (os, android version, ...),
-    * less battery usage,
-    * internal changes,
-    * better satellite count
+* v2.1.0: save some new values (os, android version, ...), less battery usage, internal changes, better satellite count
 * v2.0.5: Fixed possible service when stopping the service
 * v2.0.4: Progressbar moved to Notifications (fixed #1)
 * v2.0.3: Issue fixed #4 (DB handling)
