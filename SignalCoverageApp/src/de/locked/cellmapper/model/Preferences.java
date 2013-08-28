@@ -15,7 +15,7 @@ public class Preferences {
     public static String password = "password";
     public static String licenseAgreed = "licenseAgreed";
     public static String updateOnSignalChange = "updateOnSignalChange";
-    public static String showWhatsNew = "showWhatsNewV11";
+    public static String showWhatsNew = "showWhatsNewV12";
 
     public static long getAsLong(SharedPreferences preferences, String key, long def) {
         try {

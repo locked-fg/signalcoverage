@@ -77,7 +77,7 @@ public class CellMapperMain extends SherlockActivity {
                             "* minor internal changes")
                     .setPositiveButton("OK", null)
                     .create().show();
-            preferences.edit().putBoolean(Preferences.showWhatsNew, true).commit();
+            preferences.edit().putBoolean(Preferences.showWhatsNew, false).commit();
         }
     }
 
