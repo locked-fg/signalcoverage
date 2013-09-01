@@ -75,6 +75,7 @@ public class CellMapperMain extends SherlockActivity {
 
         // show what's new dialog once per version
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        // preferences.edit().putBoolean(Preferences.showWhatsNew, true).commit();
         if (preferences.getBoolean(Preferences.showWhatsNew, true)) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.whatsNewTitle)

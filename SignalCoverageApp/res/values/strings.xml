@@ -19,7 +19,7 @@
 	<string name="exportNotificationUrl">Upload progress: %d%%</string>
 
     <string name="whatsNewTitle">What\'s new in v2.3.0</string>
-    <string name="whatsNewBody">* explicit passive only option</string>
+    <string name="whatsNewBody">* explicit passive only option\n* Fixed DB issue</string>
 
     <string name="empty"></string>
 
