@@ -1,9 +1,5 @@
 package de.locked.cellmapper.model;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -13,6 +9,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.telephony.SignalStrength;
 import android.util.Log;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class DbHandler extends SQLiteOpenHelper {
     public static final String LOG_TAG = DbHandler.class.getName();
@@ -198,7 +198,7 @@ public class DbHandler extends SQLiteOpenHelper {
             db.execSQL("CREATE TEMPORARY TABLE t1_backup(" + cols + ") ");
             db.execSQL("INSERT INTO t1_backup SELECT " + cols + " FROM " + TABLE);
             db.execSQL("DROP TABLE " + TABLE);
-            db.execSQL("CREATE TABLE " + TABLE + "(" + cols + "), PRIMARY KEY (time)");
+            db.execSQL("CREATE TABLE " + TABLE + "(" + cols + ", PRIMARY KEY (time))");
             db.execSQL("INSERT INTO " + TABLE + " SELECT " + cols + " FROM t1_backup");
             db.execSQL("DROP TABLE t1_backup");
             db.setTransactionSuccessful();
