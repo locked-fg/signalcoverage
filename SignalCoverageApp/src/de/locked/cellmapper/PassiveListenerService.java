@@ -26,7 +26,8 @@ public class PassiveListenerService extends Service {
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         dataListener = new DataListener(this);
 
-        addListener();
+        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, dataListener);
     }
 
     /**
@@ -39,21 +40,12 @@ public class PassiveListenerService extends Service {
 
     @Override
     public void onDestroy() {
-        removeListener();
+        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
+        locationManager.removeUpdates(dataListener);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    private void addListener() {
-        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, dataListener);
-    }
-
-    private void removeListener() {
-        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
-        locationManager.removeUpdates(dataListener);
     }
 }

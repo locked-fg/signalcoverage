@@ -28,7 +28,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
     private final TelephonyManager telephonyManager;
     private final DbHandler db;
     private final ConnectivityManager connectivityManager;
-    private final int signalListMaxLength = 100;
+    private final int signalListMaxLength = 1000;
     private final LinkedList<SignalEntry> signalList = new LinkedList<SignalEntry>();
     // device data
     private final String manufacturer = Build.MANUFACTURER; // HTC
@@ -100,6 +100,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
         // signal information might be younger than the location
         SignalStrength signal = findSignalFor(location.getTime());
         if (signal == null) {
+            Log.d(LOG_TAG, "no signal found. Can't save anything");
             return; // well, without signal information all this is rather useless
         }
 
@@ -131,6 +132,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
 
     @Override
     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+        Log.d(LOG_TAG, "signal strength update received. Keeping " + signalList.size() + " measures.");
         signalList.addFirst(new SignalEntry(signalStrength));
         while (signalList.size() > signalListMaxLength) {
             signalList.removeLast();
@@ -160,7 +162,7 @@ public class DataListener extends PhoneStateListener implements LocationListener
             }
             satellites++;
         }
-        Log.i(LOG_TAG, "Time to first fix = " + timetofix + "ms, Satellites: " + satellites + ", In last fix: " + satellitesInFix);
+        Log.d(LOG_TAG, "Time to first fix = " + timetofix + "ms, Satellites: " + satellites + ", In last fix: " + satellitesInFix);
         this.satellitesInFix = satellitesInFix;
     }
 

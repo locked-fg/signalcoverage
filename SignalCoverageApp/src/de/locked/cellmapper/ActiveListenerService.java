@@ -22,10 +22,10 @@ import de.locked.cellmapper.model.Preferences;
 public class ActiveListenerService extends Service {
     private static final String LOG_TAG = ActiveListenerService.class.getName();
     private static final int START_LISTENING = 0;
-    private static final int MIN_TIME = 250;
+    private static final int MIN_TIME = 150;
     private final SignalChangeTrigger trigger = new SignalChangeTrigger();
     // get an update every this many meters (min distance)
-    private long minLocationDistance = 50; // m
+    private long minLocationDistance = 5; // m
     // get an update every this many milliseconds
     private long minLocationTime = 5000; // ms
     // keep the location lister that long active before unregistering again
@@ -48,6 +48,8 @@ public class ActiveListenerService extends Service {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         dataListener = new DataListener(this);
+
+        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
         // restart on preference change
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
@@ -81,6 +83,7 @@ public class ActiveListenerService extends Service {
     private void stopListening() {
         Log.d(LOG_TAG, "stopListening()");
         removeListener();
+
         if (thread != null && thread.isAlive()) {
             Log.d(LOG_TAG, "interrupting thread");
             thread.interrupt();
@@ -115,6 +118,7 @@ public class ActiveListenerService extends Service {
                     long threadAge = 0;
                     Location lastLocation = null;
                     while (!isInterrupted() && reschedule && threadAge < updateDuration) {
+                        Log.i(LOG, "poll location");
                         locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, dataListener, getMainLooper());
 
                         // handle polling
@@ -143,7 +147,7 @@ public class ActiveListenerService extends Service {
             }
 
             private boolean sameLocation(Location a, Location b) {
-                Log.d(LOG, "same location as before");
+                Log.d(LOG, "is same location as last time");
                 return a != null && b != null && a.getTime() == b.getTime();
             }
 
@@ -163,7 +167,7 @@ public class ActiveListenerService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.reschedule = true;
+        reschedule = true;
         handler.sendEmptyMessage(START_LISTENING);
         return START_STICKY;
     }
@@ -171,10 +175,10 @@ public class ActiveListenerService extends Service {
     @Override
     public void onDestroy() {
         Log.i(LOG_TAG, "destroy");
-        stopListening();
         handler.removeMessages(START_LISTENING);
-        this.reschedule = false;
         stopListening();
+        reschedule = false;
+        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
     }
 
     @Override
@@ -199,18 +203,15 @@ public class ActiveListenerService extends Service {
 
     private void addListener() {
         Log.i(LOG_TAG, "add listeners. minTime: " + minLocationTime + " / min dist: " + minLocationDistance);
-        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         if (updateOnSignalChange) {
             telephonyManager.listen(trigger, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minLocationTime, minLocationDistance, dataListener);
-//        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, dataListener);
         locationManager.addGpsStatusListener(dataListener);
     }
 
     private void removeListener() {
         Log.i(LOG_TAG, "remove listeners");
-        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
         telephonyManager.listen(trigger, PhoneStateListener.LISTEN_NONE);
         locationManager.removeUpdates(dataListener);
         locationManager.removeGpsStatusListener(dataListener);
