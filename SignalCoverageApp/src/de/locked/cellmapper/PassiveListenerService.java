@@ -24,7 +24,7 @@ public class PassiveListenerService extends Service {
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        dataListener = new DataListener(this);
+        dataListener = DataListener.getInstance(this);
 
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, dataListener);

@@ -44,10 +44,11 @@ public class ActiveListenerService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.i(LOG_TAG, "start service");
+        loadPreferences();
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        dataListener = new DataListener(this);
+        dataListener = DataListener.getInstance(this);
 
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
@@ -116,22 +117,13 @@ public class ActiveListenerService extends Service {
             public void run() {
                 try {
                     long threadAge = 0;
-                    Location lastLocation = null;
                     while (!isInterrupted() && reschedule && threadAge < updateDuration) {
                         Log.i(LOG, "poll location");
                         locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, dataListener, getMainLooper());
 
-                        // handle polling
+                        // are the following 2 lines REALLY necessary?
                         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        if (location != null && !sameLocation(location, lastLocation)) {
-                            long age = System.currentTimeMillis() - location.getTime();
-                            float dist = dist(lastLocation, location);
-                            Log.d(LOG, "location age: " + (age / 1000) + "s // dist: " + dist + "m // accuracy " + location.getAccuracy());
-                            if (age < maxLocationAge && dist > minLocationDistance) {
-                                dataListener.onLocationChanged(location);
-                                lastLocation = location;
-                            }
-                        }
+                        dataListener.onLocationChanged(location);
 
                         sleep(minLocationTime);
                         threadAge = System.currentTimeMillis() - startTime;
@@ -147,8 +139,11 @@ public class ActiveListenerService extends Service {
             }
 
             private boolean sameLocation(Location a, Location b) {
-                Log.d(LOG, "is same location as last time");
-                return a != null && b != null && a.getTime() == b.getTime();
+                boolean result = a != null && b != null && a.getTime() == b.getTime();
+                if (result) {
+                    Log.d(LOG, "is same location as last time");
+                }
+                return result;
             }
 
             private float dist(Location a, Location b) {
@@ -187,6 +182,7 @@ public class ActiveListenerService extends Service {
     }
 
     private void loadPreferences() {
+        Log.i(LOG_TAG, "(re)load preferences");
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         sleepBetweenMeasures = Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 10) * 1000l;

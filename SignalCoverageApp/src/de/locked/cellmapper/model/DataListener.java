@@ -1,6 +1,7 @@
 package de.locked.cellmapper.model;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
@@ -9,6 +10,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
@@ -23,6 +25,8 @@ public class DataListener extends PhoneStateListener implements LocationListener
     private static final String LOG_TAG = DataListener.class.getName();
     private static final SimpleDateFormat sdf = new SimpleDateFormat(
             "y-MM-dd HH:mm:ss", Locale.US);
+    // singleton
+    private static DataListener INSTANCE = null;
     private final Context context;
     private final LocationManager locationManager;
     private final TelephonyManager telephonyManager;
@@ -39,8 +43,12 @@ public class DataListener extends PhoneStateListener implements LocationListener
     // this might be null!
     private final String androidRelease = Build.VERSION.RELEASE; // android version like 2.3.7
     private int satellitesInFix;
+    //
+    private Location lastLocation = null;
+    private long minLocationTime;
+    private long minLocationDistance;
 
-    public DataListener(Context context) {
+    private DataListener(Context context) {
         this.context = context;
         this.locationManager = (LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE);
@@ -52,6 +60,22 @@ public class DataListener extends PhoneStateListener implements LocationListener
 
         // http://stackoverflow.com/questions/5499217/how-to-recognize-that-cyanogenmod-is-on-a-board/9801191
         this.osVersion = System.getProperty("os.version");
+
+        loadPreferences();
+        PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(
+                new SharedPreferences.OnSharedPreferenceChangeListener() {
+                    @Override
+                    public void onSharedPreferenceChanged(SharedPreferences p, String key) {
+                        loadPreferences();
+                    }
+                });
+    }
+
+    public static synchronized DataListener getInstance(Context context) {
+        if (INSTANCE == null) {
+            INSTANCE = new DataListener(context);
+        }
+        return INSTANCE;
     }
 
     // private void networkInfo() {
@@ -78,31 +102,41 @@ public class DataListener extends PhoneStateListener implements LocationListener
     // }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public synchronized void onLocationChanged(Location location) {
         if (location == null) {
-            Log.i(LOG_TAG, "null location received, ignore.");
+            Log.d(LOG_TAG, "null location received, ignore.");
             return;
         }
         if (MobileStatusUtils.isAirplaneModeOn(context)) {
-            Log.i(LOG_TAG, "we are in airplane mode, ignore.");
+            Log.d(LOG_TAG, "we are in airplane mode, ignore.");
+            return;
+        }
+        // I logged updates for timestamps ~12h ago right after a regular timestamp.
+        // So reject all timestamps that diff more than an hour
+        long age = Math.abs(System.currentTimeMillis() - location.getTime());
+        if (age > 3600 * 1000) {
+            Log.d(LOG_TAG, "out of date location, ignore." + sdf.format(new Date(location.getTime())));
             return;
         }
 
-        // I logged updates for timestamps ~12h ago right after a regular timestamp.
-        // So reject all timestamps that seem to be older than an hour
-        long age = Math.abs(location.getTime() - System.currentTimeMillis());
-        if (age > 3600 * 1000) {
-            Log.i(LOG_TAG, "out of date location ignored: "
-                    + sdf.format(new Date(location.getTime())));
-            return;
+        if (lastLocation != null) {
+            if (Math.abs(location.getTime() - lastLocation.getTime()) < minLocationTime) {
+                Log.d(LOG_TAG, "new location is too close (temporal) to last location, ignore");
+                return;
+            }
+            if (location.distanceTo(lastLocation) < minLocationDistance) {
+                Log.d(LOG_TAG, "location too close to last location, ignore");
+                return;
+            }
         }
 
         // signal information might be younger than the location
         SignalStrength signal = findSignalFor(location.getTime());
         if (signal == null) {
-            Log.d(LOG_TAG, "no signal found. Can't save anything");
+            Log.d(LOG_TAG, "no signal found. Can't save anything.");
             return; // well, without signal information all this is rather useless
         }
+        lastLocation = location;
 
         // keep roaming in mind!
         String carrier = telephonyManager.getNetworkOperatorName();
@@ -164,6 +198,13 @@ public class DataListener extends PhoneStateListener implements LocationListener
         }
         Log.d(LOG_TAG, "Time to first fix = " + timetofix + "ms, Satellites: " + satellites + ", In last fix: " + satellitesInFix);
         this.satellitesInFix = satellitesInFix;
+    }
+
+    private void loadPreferences() {
+        Log.i(LOG_TAG, "(re)load preferences");
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        minLocationTime = Preferences.getAsLong(preferences, Preferences.min_location_time, 60) * 1000l;
+        minLocationDistance = Preferences.getAsLong(preferences, Preferences.min_location_distance, 50);
     }
 
     class SignalEntry {

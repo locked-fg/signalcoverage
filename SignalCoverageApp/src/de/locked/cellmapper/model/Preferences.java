@@ -3,6 +3,8 @@ package de.locked.cellmapper.model;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import de.locked.cellmapper.R;
+
 public class Preferences {
     public static final String LOG_TAG = Preferences.class.getName();
 
@@ -15,7 +17,7 @@ public class Preferences {
     public static String password = "password";
     public static String licenseAgreed = "licenseAgreed";
     public static String updateOnSignalChange = "updateOnSignalChange";
-    public static String showWhatsNew = "showWhatsNewV13";
+    public static String showWhatsNew = "showWhatsNew" + R.string.version;
 
     public static long getAsLong(SharedPreferences preferences, String key, long def) {
         try {
