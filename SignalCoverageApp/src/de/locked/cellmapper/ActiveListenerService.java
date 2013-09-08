@@ -19,10 +19,10 @@ import android.util.Log;
 import de.locked.cellmapper.model.DataListener;
 import de.locked.cellmapper.model.Preferences;
 
-public class ActiveListenerService extends Service {
+public class ActiveListenerService extends Service implements OnSharedPreferenceChangeListener {
     private static final String LOG_TAG = ActiveListenerService.class.getName();
     private static final int START_LISTENING = 0;
-    private static final int MIN_TIME = 150;
+    private static final int MIN_TIME = 150; // ms - Minimum for minLocationTime
     private final SignalChangeTrigger trigger = new SignalChangeTrigger();
     // get an update every this many meters (min distance)
     private long minLocationDistance = 5; // m
@@ -37,30 +37,23 @@ public class ActiveListenerService extends Service {
     private volatile boolean reschedule;
     private DataListener dataListener;
     private Handler handler;
-    private Thread thread;
+    private Thread pollingThread;
     private boolean updateOnSignalChange;
+    private SharedPreferences preferences;
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i(LOG_TAG, "start service");
-        loadPreferences();
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
         dataListener = DataListener.getInstance(this);
-
+        //
+        preferences.registerOnSharedPreferenceChangeListener(this);
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
-        // restart on preference change
-        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences p, String key) {
-                loadPreferences();
-                stopListening();
-                startListening();
-            }
-        });
+        loadPreferences();
 
         handler = new Handler() {
 
@@ -85,9 +78,9 @@ public class ActiveListenerService extends Service {
         Log.d(LOG_TAG, "stopListening()");
         removeListener();
 
-        if (thread != null && thread.isAlive()) {
-            Log.d(LOG_TAG, "interrupting thread");
-            thread.interrupt();
+        if (pollingThread != null && pollingThread.isAlive()) {
+            Log.d(LOG_TAG, "interrupting pollingThread");
+            pollingThread.interrupt();
         }
         if (reschedule) {
             Log.d(LOG_TAG, "reschedule to start listening in " + sleepBetweenMeasures + "ms");
@@ -100,15 +93,15 @@ public class ActiveListenerService extends Service {
             Log.d(LOG_TAG, "reschedule = false. do nothing.");
             return;
         }
-        if (thread != null && thread.isAlive()) {
-            Log.w(LOG_TAG, "Thread still active. do nothing. - This shouldn't happen!");
+        if (pollingThread != null && pollingThread.isAlive()) {
+            Log.w(LOG_TAG, "Thread still active. Do nothing. - This shouldn't happen!");
             return;
         }
 
         addListener();
 
         Log.d(LOG_TAG, "starting location polling thread");
-        thread = new Thread() {
+        pollingThread = new Thread() {
             private final String LOG = LOG_TAG + "#Thread";
             private final long maxLocationAge = 5 * 60 * 1000; // 5min
             private final long startTime = System.currentTimeMillis();
@@ -122,6 +115,7 @@ public class ActiveListenerService extends Service {
                         locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, dataListener, getMainLooper());
 
                         // are the following 2 lines REALLY necessary?
+                        // Could be superseded by the requestSingleUpdate() call
                         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                         dataListener.onLocationChanged(location);
 
@@ -129,7 +123,7 @@ public class ActiveListenerService extends Service {
                         threadAge = System.currentTimeMillis() - startTime;
                     }
 
-                    Log.d(LOG, "thread age " + threadAge + "ms reached - stopping self and reschedule in " + sleepBetweenMeasures + "ms");
+                    Log.d(LOG, "thread age: " + threadAge + "ms reached - stopping self and reschedule in " + sleepBetweenMeasures + "ms");
                     handler.sendEmptyMessageDelayed(START_LISTENING, sleepBetweenMeasures);
                 } catch (InterruptedException e) {
                     Log.i(LOG, "thread interrupted");
@@ -137,54 +131,12 @@ public class ActiveListenerService extends Service {
                     removeListener();
                 }
             }
-
-            private boolean sameLocation(Location a, Location b) {
-                boolean result = a != null && b != null && a.getTime() == b.getTime();
-                if (result) {
-                    Log.d(LOG, "is same location as last time");
-                }
-                return result;
-            }
-
-            private float dist(Location a, Location b) {
-                if (a == null || b == null) {
-                    return Float.MAX_VALUE;
-                } else {
-                    return a.distanceTo(b);
-                }
-            }
         };
-        thread.start();
-    }
-
-    /**
-     * We want this service to continue running until it is explicitly stopped, so return sticky.
-     */
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        reschedule = true;
-        handler.sendEmptyMessage(START_LISTENING);
-        return START_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.i(LOG_TAG, "destroy");
-        handler.removeMessages(START_LISTENING);
-        stopListening();
-        reschedule = false;
-        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+        pollingThread.start();
     }
 
     private void loadPreferences() {
         Log.i(LOG_TAG, "(re)load preferences");
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
         sleepBetweenMeasures = Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 10) * 1000l;
         updateDuration = Preferences.getAsLong(preferences, Preferences.update_duration, 30) * 1000l;
 
@@ -214,7 +166,39 @@ public class ActiveListenerService extends Service {
     }
 
     /**
-     * Class that triggers a measurement when the signal strength changes
+     * We want this service to continue running until it is explicitly stopped, so return sticky.
+     */
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        reschedule = true;
+        handler.sendEmptyMessage(START_LISTENING);
+        return START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.i(LOG_TAG, "destroy");
+        reschedule = false;
+        handler.removeMessages(START_LISTENING);
+        stopListening();
+        telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
+        preferences.unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences p, String key) {
+        loadPreferences();
+        stopListening();
+        startListening();
+    }
+
+    /**
+     * Listener that triggers a measurement when the signal strength changes.
      */
     class SignalChangeTrigger extends PhoneStateListener {
         @Override

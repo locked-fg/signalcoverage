@@ -57,6 +57,9 @@ The signature is used to validate the upload and is computed by
 
 
 ## Changelog:
+* v2.3.1:
+    * fixed some preference bugs
+    * internal refactoring
 * v2.3.0:
     * explicit passive listener option
     * Fixed DB issue

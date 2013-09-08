@@ -18,9 +18,9 @@
     <string name="exportNotificationSd">Save to SD: %d%%</string>
     <string name="exportNotificationUrl">Upload progress: %d%%</string>
 
-    <string name="version">14</string>
+    <string name="version">15</string>
     <string name="whatsNewTitle">What\'s new:</string>
-    <string name="whatsNewBody">* fixed preference bugs</string>
+    <string name="whatsNewBody">* fixed some preference bugs\n* internal refactoring</string>
 
     <string name="empty"></string>
 
