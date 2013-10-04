@@ -57,6 +57,8 @@ The signature is used to validate the upload and is computed by
 
 
 ## Changelog:
+* v2.3.2:
+    * keep Phone from going to standby and thus disable GPS
 * v2.3.1:
     * fixed some preference bugs
     * internal refactoring

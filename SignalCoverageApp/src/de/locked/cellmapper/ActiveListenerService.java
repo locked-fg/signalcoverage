@@ -10,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
@@ -28,8 +29,8 @@ public class ActiveListenerService extends Service implements OnSharedPreference
     private long minLocationDistance = 5; // m
     // get an update every this many milliseconds
     private long minLocationTime = 5000; // ms
-    // keep the location lister that long active before unregistering again
-    // thanks htc Desire + cyanogen mod
+    // keep the location lister that long active before unregistering again. Thanks htc Desire + cyanogen mod.
+    // This combination causes random phone reboots if gps listens too long in background
     private long sleepBetweenMeasures = 30000; // ms
     private long updateDuration = 30000; // ms
     private LocationManager locationManager;
@@ -40,6 +41,7 @@ public class ActiveListenerService extends Service implements OnSharedPreference
     private Thread pollingThread;
     private boolean updateOnSignalChange;
     private SharedPreferences preferences;
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     public void onCreate() {
@@ -72,6 +74,11 @@ public class ActiveListenerService extends Service implements OnSharedPreference
                 }
             }
         };
+
+        // keep the phone from going to standby. This disables GPS updates ...
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, LOG_TAG);
+        wakeLock.acquire();
     }
 
     private void stopListening() {
@@ -183,6 +190,7 @@ public class ActiveListenerService extends Service implements OnSharedPreference
         stopListening();
         telephonyManager.listen(dataListener, PhoneStateListener.LISTEN_NONE);
         preferences.unregisterOnSharedPreferenceChangeListener(this);
+        wakeLock.release();
     }
 
     @Override

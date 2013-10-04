@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="de.locked.cellmapper"
-          android:versionCode="16"
-          android:versionName="2.3.1">
+          android:versionCode="17"
+          android:versionName="2.3.2">
 
 <uses-sdk
             android:minSdkVersion="9"
@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
             android:allowBackup="true"
