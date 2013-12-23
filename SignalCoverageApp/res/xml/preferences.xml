@@ -2,22 +2,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   android:orderingFromXml="true">
 
-    <PreferenceCategory android:title="Location">
-        <ListPreference
-                android:defaultValue="60"
-                android:entries="@array/updateInterval"
-                android:entryValues="@array/updateIntervalValues"
-                android:key="update_duration"
-                android:summary="Listen this long for updates until setting asleep."
-                android:title="Update Duration"/>
-        <ListPreference
-                android:defaultValue="1"
-                android:entries="@array/sleepBetweenLocationEntries"
-                android:entryValues="@array/sleepBetweenLocationValues"
-                android:key="sleep_between_measures"
-                android:summary="Time between measurements (reduce power consumption)"
-                android:title="Sleep between updates"/>
-    </PreferenceCategory>
     <PreferenceCategory android:title="Update frequency">
         <ListPreference
                 android:defaultValue="5"
@@ -36,8 +20,8 @@
         <CheckBoxPreference
                 android:defaultValue="true"
                 android:key="updateOnSignalChange"
-                android:summaryOff="Additional location update on signal change is disabled."
-                android:summaryOn="Additional location update on signal change is enabled."
+                android:summaryOff="Additional location updates on signal changes are disabled."
+                android:summaryOn="Additional location updates on signal changes are enabled."
                 android:title="Dynamic measurement"/>
 
     </PreferenceCategory>
@@ -53,7 +37,7 @@
         <EditTextPreference
                 android:key="login"
                 android:singleLine="true"
-                android:summary="The login for the upload service. Leave empty of auto signup."
+                android:summary="The login for the upload service. Leave empty for auto signup."
                 android:title="Login"
                 android:inputType="textNoSuggestions"
                 />

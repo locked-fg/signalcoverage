@@ -72,24 +72,6 @@ public class CellMapperMain extends SherlockActivity {
         startUiUpdates();
         ensureServiceStarted();
         startPassiveService();
-
-        maybeShowWhatsNew();
-    }
-
-    /**
-     * show what's new dialog once per version
-     */
-    private void maybeShowWhatsNew() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String whatsNewPref = Preferences.showWhatsNew + getString(R.string.version);
-        if (preferences.getBoolean(whatsNewPref, true)) {
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.whatsNewTitle)
-                    .setMessage(R.string.whatsNewBody)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .create().show();
-            preferences.edit().putBoolean(whatsNewPref, false).commit();
-        }
     }
 
     @Override

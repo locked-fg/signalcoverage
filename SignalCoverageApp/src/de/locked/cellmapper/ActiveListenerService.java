@@ -22,6 +22,12 @@ import de.locked.cellmapper.model.Preferences;
 
 public class ActiveListenerService extends Service implements OnSharedPreferenceChangeListener {
     private static final String LOG_TAG = ActiveListenerService.class.getName();
+
+    // keep the location lister that long active before unregistering again. Thanks htc Desire + cyanogen mod.
+    // This combination causes random phone reboots if gps listens too long in background
+    private final long sleepBetweenMeasures = 2000; // ms
+    private final long updateDuration = 60000; // ms
+
     private static final int START_LISTENING = 0;
     private static final int MIN_TIME = 150; // ms - Minimum for minLocationTime
     private final SignalChangeTrigger trigger = new SignalChangeTrigger();
@@ -29,10 +35,7 @@ public class ActiveListenerService extends Service implements OnSharedPreference
     private long minLocationDistance = 5; // m
     // get an update every this many milliseconds
     private long minLocationTime = 5000; // ms
-    // keep the location lister that long active before unregistering again. Thanks htc Desire + cyanogen mod.
-    // This combination causes random phone reboots if gps listens too long in background
-    private long sleepBetweenMeasures = 30000; // ms
-    private long updateDuration = 30000; // ms
+
     private LocationManager locationManager;
     private TelephonyManager telephonyManager;
     private volatile boolean reschedule;
@@ -144,9 +147,6 @@ public class ActiveListenerService extends Service implements OnSharedPreference
 
     private void loadPreferences() {
         Log.i(LOG_TAG, "(re)load preferences");
-        sleepBetweenMeasures = Preferences.getAsLong(preferences, Preferences.sleep_between_measures, 10) * 1000l;
-        updateDuration = Preferences.getAsLong(preferences, Preferences.update_duration, 30) * 1000l;
-
         minLocationTime = Preferences.getAsLong(preferences, Preferences.min_location_time, 60) * 1000l;
         minLocationDistance = Preferences.getAsLong(preferences, Preferences.min_location_distance, 50);
 
