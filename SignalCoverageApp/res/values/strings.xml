@@ -3,7 +3,9 @@
     <string name="app_name">SignalCoverage</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_upload">Upload</string>
-    <string name="menu_saveSD">Save (SD)</string>
+    <string name="menu_saveSD">Save to SD</string>
+    <string name="menu_onlineAccount">Online Account Settings</string>
+    <string name="menu_toWeb">Visit SignalCoverage Online</string>
     <string name="title_activity_main">SignalCoverage</string>
     <string name="title_activity_config">ConfigActivity</string>
     <string name="configButton">Config</string>

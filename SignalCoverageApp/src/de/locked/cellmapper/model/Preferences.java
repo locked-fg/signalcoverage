@@ -1,8 +1,11 @@
 package de.locked.cellmapper.model;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
+// enum!!!
 public class Preferences {
     public static final String LOG_TAG = Preferences.class.getName();
 
@@ -16,6 +19,11 @@ public class Preferences {
     public static String licenseAgreed = "licenseAgreed";
     public static String updateOnSignalChange = "updateOnSignalChange";
     public static String showWhatsNew = "showWhatsNew"; // will be appended with version string on demand
+
+    public static String getString(Context c, String key, String def){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(c);
+        return preferences.getString(key, def);
+    }
 
     public static long getAsLong(SharedPreferences preferences, String key, long def) {
         try {

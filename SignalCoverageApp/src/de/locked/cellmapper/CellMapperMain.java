@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -226,6 +227,15 @@ public class CellMapperMain extends SherlockActivity {
 
             case R.id.menu_saveSD:
                 new FileExporter(this, "SignalStrength/data").execute();
+                return true;
+
+            case R.id.menu_onlineAccount:
+                String url = "https://signalcoverage-locked.rhcloud.com/autoLogin.jsp?u=%s&p=%s";
+                url = String.format(url,
+                        Preferences.getString(this, Preferences.login, ""),
+                        Preferences.getString(this, Preferences.password, ""));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
                 return true;
 
             default:
