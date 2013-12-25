@@ -3,6 +3,7 @@ apply plugin: 'android'
 repositories {
     mavenCentral()
 }
+
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile project(':ActionBarSherlock-4.2.0:library')
@@ -10,7 +11,6 @@ dependencies {
 
     compile 'commons-codec:commons-codec:1.8'
     compile 'com.google.code.gson:gson:2.2.2'
-
 }
 
 android {
@@ -40,4 +40,43 @@ android {
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
     }
+
+    signingConfigs {
+        debug {
+            storeFile file("C:\\Users\\Franz\\Documents\\Android Keystore\\debug.keystore")
+        }
+        release {
+// http://bryankrosenbaum.com/2013/11/27/getting-to-know-gradle-auto-increment-version-and-signing-releases/
+//            storeFile file("....Android Keystore\\Keystore")
+//            storePassword "*"
+//            keyAlias "*"
+//            keyPassword "*"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+}
+
+def Properties props = new Properties()
+def propFile = new File('signing.properties')
+if (propFile.canRead()){
+    props.load(new FileInputStream(propFile))
+
+    if (props!=null && props.containsKey('STORE_FILE') && props.containsKey('STORE_PASSWORD') &&
+            props.containsKey('KEY_ALIAS') && props.containsKey('KEY_PASSWORD')) {
+        android.signingConfigs.release.storeFile = file(props['STORE_FILE'])
+        android.signingConfigs.release.storePassword = props['STORE_PASSWORD']
+        android.signingConfigs.release.keyAlias = props['KEY_ALIAS']
+        android.signingConfigs.release.keyPassword = props['KEY_PASSWORD']
+    } else {
+        println 'signing.properties found but some entries are missing'
+        android.buildTypes.release.signingConfig = null
+    }
+}else {
+    println 'signing.properties not found'
+    android.buildTypes.release.signingConfig = null
 }
