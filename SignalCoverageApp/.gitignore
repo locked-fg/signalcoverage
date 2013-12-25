@@ -27,3 +27,6 @@ local.properties
 *.ipr
 *~
 *.swp
+
+# signing
+signing.properties
