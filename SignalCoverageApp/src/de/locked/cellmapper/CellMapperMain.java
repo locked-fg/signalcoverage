@@ -238,6 +238,11 @@ public class CellMapperMain extends SherlockActivity {
                 startActivity(browserIntent);
                 return true;
 
+            case R.id.menu_onlineWeb:
+                String url2 = "https://signalcoverage-locked.rhcloud.com";
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url2)));
+                return true;
+
             default:
                 return false;
         }
