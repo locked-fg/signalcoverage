@@ -9,7 +9,7 @@ dependencies {
     compile project(':ActionBarSherlock-4.2.0:library')
     compile files('libs/signalcoverage-share-2.0-SNAPSHOT.jar')
 
-    compile 'commons-codec:commons-codec:1.8'
+//    compile 'commons-codec:commons-codec:1.8'
     compile 'com.google.code.gson:gson:2.2.2'
 }
 

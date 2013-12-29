@@ -11,8 +11,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
-import android.util.Base64;
 import android.util.Log;
+
+import de.locked.B64.Base64;
 import de.locked.cellmapper.R;
 import de.locked.cellmapper.model.Preferences;
 import de.locked.signalcoverage.share.v2.ApiData;
@@ -47,7 +48,6 @@ public class UrlExporter extends AbstractAsyncExporterTask {
     
     @Override
     protected Void doInBackground(Void... params) {
-        new org.apache.commons.codec.binary.Base64();
         if (rest == null) {
             Log.i(LOG_TAG, "no Rest service initialized");
             return null;
@@ -128,14 +128,15 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                     throw new IOException(message);
                 }
 
-                user = encrypt(plainPassUser);
-
                 // if succeeded, save credentials
                 Log.i(LOG_TAG, "got a user name: " + user.userId);
                 Editor editor = preferences.edit();
                 editor.putString(Preferences.login, Integer.toString(plainPassUser.userId));
                 editor.putString(Preferences.password, plainPassUser.secret);
                 editor.commit();
+
+                // get the user
+                user = getUserFromPreference();
             }
         }
 
@@ -154,16 +155,8 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         }
 
         int login = Integer.parseInt(loginString);
-        ApiUser user = new ApiUser(login, pass);
-        return encrypt(user);
-    }
-
-    // create the secret hash
-    private ApiUser encrypt(ApiUser user) {
-        if (user == null) {
-            throw new NullPointerException("user must not be null");
-        }
-        String encrypted = Base64.encodeToString(ApiUser.makePass(user.userId, user.secret), Base64.DEFAULT);
-        return new ApiUser(user.userId, encrypted);
+        String encrypted = new String(new Base64(true).encode(ApiUser.makePass(login, pass)));
+        return new ApiUser(login, encrypted);
     }
 }
+

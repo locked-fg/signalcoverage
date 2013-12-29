@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="de.locked.cellmapper"
-          android:versionCode="19"
-          android:versionName="2.4.1">
+          android:versionCode="20"
+          android:versionName="2.4.2">
 
 <uses-sdk
             android:minSdkVersion="9"

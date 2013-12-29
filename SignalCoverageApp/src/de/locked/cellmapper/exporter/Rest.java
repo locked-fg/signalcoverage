@@ -1,11 +1,12 @@
 package de.locked.cellmapper.exporter;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Locale;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -32,8 +33,8 @@ public class Rest {
     private static final String LOG_TAG = Rest.class.getName();
 
     private final String signupUrl = "/2/user/signUp/";
-    // userId, timestamp, signature
-    private final String uploadPattern = "/2/data/%s/%d/%s/";
+    // userId, hashed pass
+    private final String uploadPattern = "/2/data/%s/%s/";
 
     private final String fullUploadURL;
     private final String fullSignupURL;
@@ -42,36 +43,8 @@ public class Rest {
         if (serverUrl == null) {
             throw new NullPointerException("url must not be null");
         }
-        serverUrl = sanitizeUploadURL(serverUrl);
-        
         this.fullUploadURL = serverUrl + uploadPattern;
         this.fullSignupURL = serverUrl + signupUrl;
-    }
-
-    /**
-     * add http before and remove a trailing slash
-     * 
-     * @param url
-     * @return
-     */
-    private String sanitizeUploadURL(String url) {
-        Log.d(LOG_TAG, "sanitizing url: " + url);
-
-        url = url.trim();
-        url = url.replace(". ", ".");
-        if (url.length() == 0) {
-            throw new IllegalArgumentException("URL must not be empty");
-        }
-
-        if (url.endsWith("/")) {
-            url = url.substring(0, url.length() - 1);
-        }
-        if (!url.startsWith("http")) {
-            url = "http://" + url;
-        }
-
-        Log.d(LOG_TAG, "sanitized url: " + url);
-        return url;
     }
 
     public final ApiUser signUp() throws ClientProtocolException, IOException {
@@ -97,9 +70,8 @@ public class Rest {
      */
     public final int putData(ApiUser user, Collection<ApiData> dataList) throws IOException {
         int timestamp = (int) (Calendar.getInstance().getTimeInMillis() / 1000);
-        String signature = new Signer().createSignature(user.userId, user.secret, timestamp, dataList);
         String url = String.format(Locale.US, fullUploadURL, //
-                user.userId, timestamp, signature);
+                user.userId, URLEncoder.encode(user.secret, "UTF-8"));
         String jsonPayload = new Gson().toJson(dataList);
         
         Header jsonHeader = new BasicHeader(HTTP.CONTENT_TYPE, "application/json");
