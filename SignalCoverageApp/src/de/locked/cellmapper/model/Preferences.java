@@ -18,7 +18,6 @@ public class Preferences {
     public static String password = "password";
     public static String licenseAgreed = "licenseAgreed";
     public static String updateOnSignalChange = "updateOnSignalChange";
-    public static String showWhatsNew = "showWhatsNew"; // will be appended with version string on demand
 
     public static String getString(Context c, String key, String def){
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(c);

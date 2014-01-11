@@ -7,15 +7,13 @@ repositories {
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     compile project(':ActionBarSherlock-4.2.0:library')
-    compile files('libs/signalcoverage-share-2.0-SNAPSHOT.jar')
-
-//    compile 'commons-codec:commons-codec:1.8'
-    compile 'com.google.code.gson:gson:2.2.2'
+    compile 'com.google.code.gson:gson:2.2.4'
+    compile files('libs/signalcoverage-share-3.0.0-SNAPSHOT.jar')
 }
 
 android {
     compileSdkVersion 17
-    buildToolsVersion "17.0.0"
+    buildToolsVersion '17.0.0'
 
     sourceSets {
         main {

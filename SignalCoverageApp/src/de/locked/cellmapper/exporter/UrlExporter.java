@@ -1,29 +1,30 @@
 package de.locked.cellmapper.exporter;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import org.apache.http.client.ClientProtocolException;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import org.apache.http.client.ClientProtocolException;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+
 import de.locked.B64.Base64;
 import de.locked.cellmapper.R;
 import de.locked.cellmapper.model.Preferences;
-import de.locked.signalcoverage.share.v2.ApiData;
-import de.locked.signalcoverage.share.v2.ApiUser;
+import de.locked.signalcoverage.share.ApiData;
+import de.locked.signalcoverage.share.ApiUser;
 
 public class UrlExporter extends AbstractAsyncExporterTask {
     private static final String LOG_TAG = UrlExporter.class.getName();
     private final Rest rest;
     private final SharedPreferences preferences;
-    private final int chunksize = 300;
+    private final int chunksize = 100;
 
     public UrlExporter(Context context) {
         super(context, R.string.exportNotificationUrl, android.R.drawable.ic_menu_upload);
@@ -33,19 +34,22 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         rest = (baseURL != null) ? new Rest(baseURL) : null;
     }
 
-    private String getString(String col){
-    	return cursor.getString(cursor.getColumnIndex(col));
+    private String getString(String col) {
+        return cursor.getString(cursor.getColumnIndex(col));
     }
-    private int getInt(String col){
-    	return cursor.getInt(cursor.getColumnIndex(col));
+
+    private int getInt(String col) {
+        return cursor.getInt(cursor.getColumnIndex(col));
     }
-    private double getDouble(String col){
-    	return cursor.getDouble(cursor.getColumnIndex(col));
+
+    private double getDouble(String col) {
+        return cursor.getDouble(cursor.getColumnIndex(col));
     }
-    private float getFloat(String col){
-    	return cursor.getFloat(cursor.getColumnIndex(col));
+
+    private float getFloat(String col) {
+        return cursor.getFloat(cursor.getColumnIndex(col));
     }
-    
+
     @Override
     protected Void doInBackground(Void... params) {
         if (rest == null) {
@@ -64,20 +68,20 @@ public class UrlExporter extends AbstractAsyncExporterTask {
             Collection<ApiData> dataList = new ArrayList<ApiData>(chunksize);
             while (cursor.moveToNext() && !isCancelled()) {
                 ApiData data = new ApiData();
-                data.time = getInt("time");
-                data.accuracy = getDouble("accuracy");
-                data.altitude = getFloat("altitude");
-                data.satellites = getInt("satellites");
-                data.latitude = getDouble("latitude");
-                data.longitude = getDouble("longitude");
-                data.speed = getDouble("speed");
-                data.signalStrength = getInt("signalStrength");
-                data.carrier = getString("carrier");
-                data.androidRelease = getString("androidRelease");
-                data.manufacturer = getString("manufacturer");
-                data.model = getString("model");
-                data.device = getString("device");
-                data.osVersion = getString("osVersion");
+                data.setTime(getInt("time"));
+                data.setAccuracy(getDouble("accuracy"));
+                data.setAltitude(getFloat("altitude"));
+                data.setSatellites(getInt("satellites"));
+                data.setLatitude(getDouble("latitude"));
+                data.setLongitude(getDouble("longitude"));
+                data.setSpeed(getDouble("speed"));
+                data.setSignalStrength(getInt("signalStrength"));
+                data.setCarrier(getString("carrier"));
+                data.setAndroidRelease(getString("androidRelease"));
+                data.setManufacturer(getString("manufacturer"));
+                data.setModel(getString("model"));
+                data.setDevice(getString("device"));
+                data.setOsVersion(getString("osVersion"));
                 dataList.add(data);
                 i++;
 
@@ -89,7 +93,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
             if (!dataList.isEmpty()) {
                 upload(user, dataList, i);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             notify("Encountered an issue: " + e.getMessage(), android.R.drawable.stat_notify_error);
             return null;
         }
@@ -97,8 +101,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         return null;
     }
 
-    private void upload(ApiUser user, Collection<ApiData> dataList, int i) throws UnsupportedEncodingException,
-            ClientProtocolException, IOException {
+    private void upload(ApiUser user, Collection<ApiData> dataList, int i) throws IOException, URISyntaxException {
         int statusCode = rest.putData(user, dataList);
         dataList.clear();
         publishProgress(i * 100 / max);
@@ -129,10 +132,10 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 }
 
                 // if succeeded, save credentials
-                Log.i(LOG_TAG, "got a user name: " + user.userId);
+                Log.i(LOG_TAG, "got a user name: " + user.getUserId());
                 Editor editor = preferences.edit();
-                editor.putString(Preferences.login, Integer.toString(plainPassUser.userId));
-                editor.putString(Preferences.password, plainPassUser.secret);
+                editor.putString(Preferences.login, Integer.toString(plainPassUser.getUserId()));
+                editor.putString(Preferences.password, plainPassUser.getSecret());
                 editor.commit();
 
                 // get the user
@@ -150,7 +153,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
         loginString = loginString.trim();
         pass = pass.trim();
 
-        if (loginString.length() == 0 || pass.length() == 0) {
+        if (loginString.isEmpty() || pass.isEmpty()) {
             return null;
         }
 
