@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -29,9 +30,9 @@ import de.locked.signalcoverage.share.ApiUser;
 public class Rest {
     private static final String LOG_TAG = Rest.class.getName();
 
-    private final String signupUrl = "/user/signUp/";
+    private final String signupUrl = "/3/user/signUp/";
     // userId, hashed pass
-    private final String uploadPattern = "/data/%s/%s/";
+    private final String uploadPattern = "/3/data/%d/%s";
 
     private final String fullUploadURL;
     private final String fullSignupURL;
@@ -40,6 +41,8 @@ public class Rest {
         if (serverUrl == null) {
             throw new NullPointerException("url must not be null");
         }
+//        serverUrl = "http://192.168.178.21/rest";
+//        serverUrl = "http://signalcoverage-locked.rhcloud.com/rest";
         serverUrl = beautify(serverUrl);
         this.fullUploadURL = serverUrl + uploadPattern;
         this.fullSignupURL = serverUrl + signupUrl;
@@ -82,7 +85,7 @@ public class Rest {
                 user.getUserId(), URLEncoder.encode(user.getSecret(), "UTF-8"));
 
         String data = new Gson().toJson(dataList);
-        HttpPut post = new HttpPut();
+        HttpPost post = new HttpPost();
         post.setURI(new URI(url));
         post.setEntity(new StringEntity(data));
         HttpResponse response = new DefaultHttpClient().execute(post);
