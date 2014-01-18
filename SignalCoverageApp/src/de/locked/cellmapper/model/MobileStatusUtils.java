@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.Service;
 import android.content.Context;
+import android.location.LocationManager;
 import android.provider.Settings;
 
 public class MobileStatusUtils {
@@ -13,6 +14,15 @@ public class MobileStatusUtils {
 
     private MobileStatusUtils() {
     };
+
+    public static boolean gpsEnabled(Context context){
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    public static boolean fakeLocationEnabled(Context context){
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("1");
+    }
 
     /**
      * checks if the service is running

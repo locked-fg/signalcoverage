@@ -117,6 +117,18 @@ public class CellMapperMain extends SherlockActivity {
             return;
         }
 
+        // Fake location enabled?
+        if (MobileStatusUtils.fakeLocationEnabled(this)){
+            openDialog("Fake location must be disabled.", R.string.open_settings, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                    startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                }
+            });
+            return;
+        }
+
         // check if location check is allowed at all
         String locationProvidersAllowed = Secure.getString(getContentResolver(), Secure.LOCATION_PROVIDERS_ALLOWED);
         if (locationProvidersAllowed == null || locationProvidersAllowed.length() == 0) {
@@ -127,9 +139,7 @@ public class CellMapperMain extends SherlockActivity {
         }
 
         // GPS disabled
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        boolean gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if (!gpsEnabled) {
+        if (!MobileStatusUtils.gpsEnabled(this)) {
             maybeShowGPSDisabledAlertToUser("GPS is disabled in your device. Please enable it.");
             return;
         }

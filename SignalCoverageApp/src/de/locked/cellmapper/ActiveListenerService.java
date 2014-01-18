@@ -2,6 +2,7 @@ package de.locked.cellmapper;
 
 import android.app.Service;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -12,12 +13,14 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import de.locked.cellmapper.model.DataListener;
+import de.locked.cellmapper.model.MobileStatusUtils;
 import de.locked.cellmapper.model.Preferences;
 
 public class ActiveListenerService extends Service implements OnSharedPreferenceChangeListener {
@@ -111,14 +114,19 @@ public class ActiveListenerService extends Service implements OnSharedPreference
         addListener();
 
         Log.d(LOG_TAG, "starting location polling thread");
+        final Context c = this;
         pollingThread = new Thread() {
             private final String LOG = LOG_TAG + "#Thread";
-            private final long maxLocationAge = 5 * 60 * 1000; // 5min
             private final long startTime = System.currentTimeMillis();
 
             @Override
             public void run() {
                 try {
+                    if (!MobileStatusUtils.gpsEnabled(c) || MobileStatusUtils.fakeLocationEnabled(c)){
+                        removeListener();
+                        return;
+                    }
+
                     long threadAge = 0;
                     while (!isInterrupted() && reschedule && threadAge < updateDuration) {
                         Log.i(LOG, "poll location");
@@ -126,8 +134,8 @@ public class ActiveListenerService extends Service implements OnSharedPreference
 
                         // are the following 2 lines REALLY necessary?
                         // Could be superseded by the requestSingleUpdate() call
-                        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        dataListener.onLocationChanged(location);
+                        //Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        //dataListener.onLocationChanged(location);
 
                         sleep(minLocationTime);
                         threadAge = System.currentTimeMillis() - startTime;
