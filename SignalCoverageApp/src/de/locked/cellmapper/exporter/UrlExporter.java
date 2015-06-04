@@ -94,6 +94,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 upload(user, dataList, i);
             }
         } catch (Exception e) {
+            Log.e(LOG_TAG, "Encountered an issue: " + e.getMessage(), e);
             notify("Encountered an issue: " + e.getMessage(), android.R.drawable.stat_notify_error);
             return null;
         }
@@ -132,7 +133,7 @@ public class UrlExporter extends AbstractAsyncExporterTask {
                 }
 
                 // if succeeded, save credentials
-                Log.i(LOG_TAG, "got a user name: " + user.getUserId());
+                Log.i(LOG_TAG, "got a user name: " + plainPassUser.getUserId());
                 Editor editor = preferences.edit();
                 editor.putString(Preferences.login, Integer.toString(plainPassUser.getUserId()));
                 editor.putString(Preferences.password, plainPassUser.getSecret());
