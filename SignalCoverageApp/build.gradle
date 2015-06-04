@@ -13,7 +13,7 @@ dependencies {
 
 android {
     compileSdkVersion 17
-    buildToolsVersion '17.0.0'
+    buildToolsVersion '21.1.2'
 
     sourceSets {
         main {
@@ -41,7 +41,7 @@ android {
 
     signingConfigs {
         debug {
-            storeFile file("C:\\Users\\Franz\\Documents\\Android Keystore\\debug.keystore")
+            storeFile file("C:\\Users\\info_000\\Documents\\Android Keystore\\debug.keystore")
         }
         release {
 // http://bryankrosenbaum.com/2013/11/27/getting-to-know-gradle-auto-increment-version-and-signing-releases/
